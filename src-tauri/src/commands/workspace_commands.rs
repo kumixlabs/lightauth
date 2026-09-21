@@ -32,7 +32,7 @@ pub fn workspace_create(
         account_count: 0,
     };
     vault.workspaces.push(ws.clone());
-    storage::save_vault(&vault);
+    storage::save_vault(&vault)?;
     Ok(ws)
 }
 
@@ -51,7 +51,7 @@ pub fn workspace_update(
     ws.name = name;
     ws.updated_at = chrono::Utc::now().to_rfc3339();
     let result = ws.clone();
-    storage::save_vault(&vault);
+    storage::save_vault(&vault)?;
     Ok(result)
 }
 
@@ -63,7 +63,7 @@ pub fn workspace_delete(id: String, state: State<AppState>) -> Result<(), String
     }
     vault.workspaces.retain(|w| w.id != id);
     vault.accounts.retain(|a| a.workspace_id != id);
-    storage::save_vault(&vault);
+    storage::save_vault(&vault)?;
     Ok(())
 }
 
@@ -75,7 +75,7 @@ pub fn workspace_reorder(ids: Vec<String>, state: State<AppState>) -> Result<Vec
             ws.sort_order = i as i32;
         }
     }
-    storage::save_vault(&vault);
+    storage::save_vault(&vault)?;
     let mut ws = vault.workspaces.clone();
     ws.sort_by_key(|w| w.sort_order);
     Ok(ws)

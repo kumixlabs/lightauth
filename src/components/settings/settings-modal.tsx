@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { open as openDialog, save as saveDialog } from "@tauri-apps/plugin-dialog";
+import { ask, open as openDialog, save as saveDialog } from "@tauri-apps/plugin-dialog";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check } from "@tauri-apps/plugin-updater";
 import { CheckCircle2, Download, Loader2, Pencil, RefreshCw, Sparkles, Trash2 } from "lucide-react";
@@ -54,7 +54,13 @@ export function SettingsModal() {
       toastError({ message: "Cannot delete the last workspace" });
       return;
     }
-    if (!confirm(`Delete workspace "${ws.name}" and all its accounts?`)) return;
+    if (
+      !(await ask(`Delete workspace "${ws.name}" and all its accounts?`, {
+        title: "Delete Workspace",
+        kind: "warning",
+      }))
+    )
+      return;
     await deleteWorkspace(ws.id);
     toastSuccess({ message: "Workspace deleted" });
   };

@@ -52,9 +52,6 @@ pub fn run() {
             account_import_uri,
             account_import_qr,
             account_move,
-            // TOTP
-            totp_generate,
-            totp_generate_all,
         ])
         .run(tauri::generate_context!())
         .expect("error while running LightAuth");

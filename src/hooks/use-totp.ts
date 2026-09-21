@@ -2,7 +2,11 @@ import { useEffect, useRef } from "react";
 
 import { useStore } from "@/stores/app-store";
 
-/** Poll TOTP codes every second to update countdown + refresh codes at period boundary. */
+/**
+ * Poll TOTP codes every second.
+ * ponytail: 1s IPC is fine for <100 accounts (local Rust, ~0.1ms).
+ * If 500+ accounts, switch to client-side countdown with IPC only at period boundary.
+ */
 export function useTotp() {
   const refreshCodes = useStore((s) => s.refreshCodes);
   const activeWorkspaceId = useStore((s) => s.activeWorkspaceId);
@@ -11,7 +15,6 @@ export function useTotp() {
   useEffect(() => {
     if (!activeWorkspaceId) return;
 
-    // Initial load
     refreshCodes();
 
     intervalRef.current = setInterval(() => {

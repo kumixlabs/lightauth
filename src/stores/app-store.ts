@@ -45,7 +45,6 @@ interface AppState {
   // Actions
   loadWorkspaces: () => Promise<void>;
   setActiveWorkspace: (id: string) => Promise<void>;
-  loadAccounts: () => Promise<void>;
   refreshCodes: () => Promise<void>;
   setSearchQuery: (q: string) => void;
 
@@ -109,14 +108,7 @@ export const useStore = create<AppState>()(
 
       setActiveWorkspace: async (id) => {
         set({ activeWorkspaceId: id, searchQuery: "" });
-        await get().loadAccounts();
-      },
-
-      loadAccounts: async () => {
-        const { activeWorkspaceId } = get();
-        if (!activeWorkspaceId) return;
-        const accounts = await accountList(activeWorkspaceId);
-        set({ accounts });
+        await get().refreshCodes();
       },
 
       refreshCodes: async () => {
@@ -148,31 +140,31 @@ export const useStore = create<AppState>()(
         const { activeWorkspaceId } = get();
         if (!activeWorkspaceId) return;
         await accountCreate(activeWorkspaceId, input);
-        await get().loadAccounts();
+        await get().refreshCodes();
         await get().loadWorkspaces();
       },
 
       updateAccount: async (id, patch) => {
         await accountUpdate(id, patch);
-        await get().loadAccounts();
+        await get().refreshCodes();
       },
 
       deleteAccount: async (id) => {
         await accountDelete(id);
-        await get().loadAccounts();
+        await get().refreshCodes();
         await get().loadWorkspaces();
       },
 
       reorderAccounts: async (ids) => {
         await accountReorder(ids);
-        await get().loadAccounts();
+        await get().refreshCodes();
       },
 
       importUri: async (uri) => {
         const { activeWorkspaceId } = get();
         if (!activeWorkspaceId) return;
         await accountImportUri(activeWorkspaceId, uri);
-        await get().loadAccounts();
+        await get().refreshCodes();
         await get().loadWorkspaces();
       },
 
@@ -180,13 +172,13 @@ export const useStore = create<AppState>()(
         const { activeWorkspaceId } = get();
         if (!activeWorkspaceId) return;
         await accountImportQr(activeWorkspaceId, path);
-        await get().loadAccounts();
+        await get().refreshCodes();
         await get().loadWorkspaces();
       },
 
       moveAccount: async (id, workspaceId) => {
         await accountMove(id, workspaceId);
-        await get().loadAccounts();
+        await get().refreshCodes();
         await get().loadWorkspaces();
       },
 
@@ -197,7 +189,7 @@ export const useStore = create<AppState>()(
       importVault: async (path) => {
         const result = await vaultImport(path);
         await get().loadWorkspaces();
-        await get().loadAccounts();
+        await get().refreshCodes();
         return result;
       },
 

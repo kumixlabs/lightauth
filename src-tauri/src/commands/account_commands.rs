@@ -76,7 +76,7 @@ pub fn account_create(
     // Validate secret can generate a code
     generate_code(&account.secret, &account.algorithm, account.digits, account.period)?;
     vault.accounts.push(account.clone());
-    storage::save_vault(&vault);
+    storage::save_vault(&vault)?;
     Ok(account)
 }
 
@@ -113,7 +113,7 @@ pub fn account_update(
     }
     account.updated_at = chrono::Utc::now().to_rfc3339();
     let result = account.clone();
-    storage::save_vault(&vault);
+    storage::save_vault(&vault)?;
     Ok(result)
 }
 
@@ -121,7 +121,7 @@ pub fn account_update(
 pub fn account_delete(id: String, state: State<AppState>) -> Result<(), String> {
     let mut vault = state.vault.lock().map_err(|e| e.to_string())?;
     vault.accounts.retain(|a| a.id != id);
-    storage::save_vault(&vault);
+    storage::save_vault(&vault)?;
     Ok(())
 }
 
@@ -136,7 +136,7 @@ pub fn account_reorder(
             a.sort_order = i as i32;
         }
     }
-    storage::save_vault(&vault);
+    storage::save_vault(&vault)?;
     Ok(vault.accounts.clone())
 }
 
@@ -159,7 +159,7 @@ pub fn account_import_uri(
     account.sort_order = max_order + 1;
     generate_code(&account.secret, &account.algorithm, account.digits, account.period)?;
     vault.accounts.push(account.clone());
-    storage::save_vault(&vault);
+    storage::save_vault(&vault)?;
     Ok(account)
 }
 
@@ -180,8 +180,9 @@ pub fn account_import_qr(
         .unwrap_or(-1);
     let mut account = input_to_account(input, &workspace_id);
     account.sort_order = max_order + 1;
+    generate_code(&account.secret, &account.algorithm, account.digits, account.period)?;
     vault.accounts.push(account.clone());
-    storage::save_vault(&vault);
+    storage::save_vault(&vault)?;
     Ok(account)
 }
 
@@ -200,25 +201,6 @@ pub fn account_move(
     account.workspace_id = workspace_id;
     account.updated_at = chrono::Utc::now().to_rfc3339();
     let result = account.clone();
-    storage::save_vault(&vault);
+    storage::save_vault(&vault)?;
     Ok(result)
-}
-
-#[tauri::command]
-pub fn totp_generate(account_id: String, state: State<AppState>) -> Result<AccountWithCode, String> {
-    let vault = state.vault.lock().map_err(|e| e.to_string())?;
-    let account = vault
-        .accounts
-        .iter()
-        .find(|a| a.id == account_id)
-        .ok_or("Account not found")?;
-    Ok(account_with_code(account))
-}
-
-#[tauri::command]
-pub fn totp_generate_all(
-    workspace_id: String,
-    state: State<AppState>,
-) -> Result<Vec<AccountWithCode>, String> {
-    account_list(workspace_id, state)
 }

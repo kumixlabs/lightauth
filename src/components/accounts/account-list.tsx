@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { ask } from "@tauri-apps/plugin-dialog";
 import { Reorder } from "framer-motion";
 import { Check, Copy, GripVertical, Pencil, Trash2 } from "lucide-react";
 
@@ -37,6 +38,7 @@ export function AccountList() {
   const [reorderIds, setReorderIds] = useState<string[]>([]);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const clearTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const pointerStart = useRef<{ x: number; y: number } | null>(null);
 
   const handleCopy = useCallback(async (id: string, code: string) => {
     try {
@@ -99,13 +101,31 @@ export function AccountList() {
     return () => window.removeEventListener("keydown", handler);
   }, [reordering]);
 
-  // Long press handlers
-  const onPointerDown = useCallback(() => {
-    longPressTimer.current = setTimeout(enterReorder, LONG_PRESS_MS);
-  }, [enterReorder]);
+  // Long press handlers — cancel if pointer moves (scroll/drag)
+  const MOVE_THRESHOLD = 10;
+
+  const onPointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      pointerStart.current = { x: e.clientX, y: e.clientY };
+      longPressTimer.current = setTimeout(enterReorder, LONG_PRESS_MS);
+    },
+    [enterReorder],
+  );
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!pointerStart.current || !longPressTimer.current) return;
+    const dx = e.clientX - pointerStart.current.x;
+    const dy = e.clientY - pointerStart.current.y;
+    if (Math.abs(dx) > MOVE_THRESHOLD || Math.abs(dy) > MOVE_THRESHOLD) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = undefined;
+    }
+  }, []);
 
   const onPointerUp = useCallback(() => {
     if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    longPressTimer.current = undefined;
+    pointerStart.current = null;
   }, []);
 
   // Cleanup auto-clear timer on unmount
@@ -128,12 +148,17 @@ export function AccountList() {
         case "edit":
           setEditingAccount(account);
           break;
-        case "delete":
-          if (confirm(`Delete ${account.issuer} - ${account.account}?`)) {
+        case "delete": {
+          const yes = await ask(`Delete ${account.issuer} - ${account.account}?`, {
+            title: "Delete Account",
+            kind: "warning",
+          });
+          if (yes) {
             await deleteAccount(account.id);
             toastSuccess({ message: "Account deleted" });
           }
           break;
+        }
       }
     },
     [filteredAccounts, setEditingAccount, deleteAccount, handleCopy],
@@ -283,6 +308,7 @@ export function AccountList() {
     <div
       className="flex-1 overflow-y-auto px-3 py-2"
       onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerLeave={onPointerUp}
     >

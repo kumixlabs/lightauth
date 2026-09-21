@@ -39,9 +39,3 @@ export const accountImportQr = (workspaceId: string, path: string) =>
   invoke<Account>("account_import_qr", { workspaceId, path });
 export const accountMove = (id: string, workspaceId: string) =>
   invoke<Account>("account_move", { id, workspaceId });
-
-// TOTP
-export const totpGenerate = (accountId: string) =>
-  invoke<AccountWithCode>("totp_generate", { accountId });
-export const totpGenerateAll = (workspaceId: string) =>
-  invoke<AccountWithCode[]>("totp_generate_all", { workspaceId });

@@ -9,6 +9,10 @@ pub fn generate_code(
     digits: u8,
     period: u32,
 ) -> Result<(String, u32), String> {
+    if period == 0 {
+        return Err("Period must be greater than 0".into());
+    }
+
     let secret_bytes = BASE32
         .decode(secret.trim().to_uppercase().as_bytes())
         .map_err(|e| format!("Invalid Base32 secret: {e}"))?;

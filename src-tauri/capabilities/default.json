@@ -7,6 +7,7 @@
     "core:event:default",
     "dialog:allow-open",
     "dialog:allow-save",
+    "dialog:allow-ask",
     "clipboard-manager:allow-write-text",
     "clipboard-manager:allow-read-text",
     "log:default",
@@ -21,7 +22,5 @@
     "core:window:allow-unminimize",
     "core:window:allow-set-focus"
   ],
-  "windows": [
-    "main"
-  ]
+  "windows": ["main"]
 }
