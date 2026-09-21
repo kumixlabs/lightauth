@@ -23,6 +23,10 @@ export const workspaceUpdate = (id: string, name: string) =>
 export const workspaceDelete = (id: string) => invoke<void>("workspace_delete", { id });
 export const workspaceReorder = (ids: string[]) =>
   invoke<Workspace[]>("workspace_reorder", { ids });
+export const workspaceExport = (workspaceId: string, path: string) =>
+  invoke<void>("workspace_export", { workspaceId, path });
+export const workspaceImport = (workspaceId: string, path: string) =>
+  invoke<ImportResult>("workspace_import", { workspaceId, path });
 
 // Accounts
 export const accountList = (workspaceId: string) =>

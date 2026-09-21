@@ -2,6 +2,7 @@ use tauri::State;
 
 use crate::state::AppState;
 use crate::vault::storage;
+use crate::vault::types::ImportResult;
 
 #[tauri::command]
 pub fn vault_exists() -> bool {
@@ -22,12 +23,6 @@ pub fn vault_export(path: String, state: State<AppState>) -> Result<(), String> 
     let vault = state.vault.lock().map_err(|e| e.to_string())?;
     let data = serde_json::to_string_pretty(&*vault).map_err(|e| e.to_string())?;
     std::fs::write(&path, data).map_err(|e| format!("Failed to write backup: {e}"))
-}
-
-#[derive(serde::Serialize)]
-pub struct ImportResult {
-    pub imported: u32,
-    pub skipped: u32,
 }
 
 #[tauri::command]

@@ -107,7 +107,7 @@ export function AccountForm({ open, onOpenChange, account }: AccountFormProps) {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="secret">Secret (Base32) *</Label>
+            <Label htmlFor="secret">Secret (Base32) {isEditing ? "(read-only)" : "*"}</Label>
             <Input
               id="secret"
               placeholder="JBSWY3DPEHPK3PXP"

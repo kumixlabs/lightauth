@@ -43,6 +43,8 @@ pub fn run() {
             workspace_update,
             workspace_delete,
             workspace_reorder,
+            workspace_export,
+            workspace_import,
             // Accounts
             account_list,
             account_create,

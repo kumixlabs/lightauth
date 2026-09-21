@@ -68,6 +68,12 @@ pub struct AccountPatch {
     pub period: Option<u32>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ImportResult {
+    pub imported: u32,
+    pub skipped: u32,
+}
+
 fn default_algorithm() -> String {
     "SHA1".to_string()
 }

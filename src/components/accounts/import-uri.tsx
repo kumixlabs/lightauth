@@ -1,6 +1,6 @@
 import { type FormEvent, useState } from "react";
 
-import { toastSuccess } from "@kumix/ui/custom/toast";
+import { toastError, toastSuccess } from "@kumix/ui/custom/toast";
 import { Button } from "@kumix/ui/ui/button";
 import {
   Dialog,
@@ -56,6 +56,8 @@ export function ImportUriDialog({ open, onOpenChange }: ImportUriDialogProps) {
       toastSuccess({ message: `Imported ${imported} account(s)` });
       onOpenChange(false);
       setUris("");
+    } else if (errors.length > 0) {
+      toastError({ message: "Failed to import account(s)" });
     }
     if (errors.length > 0) {
       setError(errors.join("\n"));

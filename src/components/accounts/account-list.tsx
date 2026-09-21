@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
-import { ask } from "@tauri-apps/plugin-dialog";
 import { Reorder } from "framer-motion";
 import { Check, Copy, GripVertical, Pencil, Trash2 } from "lucide-react";
 
+import { ConfirmDialog } from "@kumix/ui/custom/confirm-dialog";
 import { toastSuccess } from "@kumix/ui/custom/toast";
 import {
   type SwipeableListItem as SLItem,
@@ -13,6 +13,7 @@ import {
 import { Button } from "@kumix/ui/ui/button";
 import { CountdownRing } from "@/components/shared/countdown-ring";
 import { useStore } from "@/stores/app-store";
+import type { AccountWithCode } from "@/types";
 
 function formatCode(code: string): string {
   if (code.length === 6) return `${code.slice(0, 3)} ${code.slice(3)}`;
@@ -36,6 +37,7 @@ export function AccountList() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [reordering, setReordering] = useState(false);
   const [reorderIds, setReorderIds] = useState<string[]>([]);
+  const [accountToDelete, setAccountToDelete] = useState<AccountWithCode | null>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const clearTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
@@ -148,20 +150,12 @@ export function AccountList() {
         case "edit":
           setEditingAccount(account);
           break;
-        case "delete": {
-          const yes = await ask(`Delete ${account.issuer} - ${account.account}?`, {
-            title: "Delete Account",
-            kind: "warning",
-          });
-          if (yes) {
-            await deleteAccount(account.id);
-            toastSuccess({ message: "Account deleted" });
-          }
+        case "delete":
+          setAccountToDelete(account);
           break;
-        }
       }
     },
-    [filteredAccounts, setEditingAccount, deleteAccount, handleCopy],
+    [filteredAccounts, setEditingAccount, handleCopy],
   );
 
   const leftActions: SwipeAction[] = [
@@ -284,7 +278,10 @@ export function AccountList() {
               className={`cursor-pointer font-bold font-mono text-base tabular-nums tracking-wider transition-colors ${
                 isCopied ? "text-emerald-600 dark:text-emerald-400" : "hover:text-primary"
               }`}
-              onClick={() => handleCopy(a.id, a.code)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCopy(a.id, a.code);
+              }}
             >
               {isCopied ? (
                 <span className="flex items-center gap-1">
@@ -305,19 +302,37 @@ export function AccountList() {
   });
 
   return (
-    <div
-      className="flex-1 overflow-y-auto px-3 py-2"
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerLeave={onPointerUp}
-    >
-      <SwipeableList
-        items={items}
-        onAction={handleAction}
-        closeOnAction
-        classNames={{ surface: "!cursor-default bg-card shadow-sm dark:shadow-none" }}
+    <>
+      <div
+        className="flex-1 overflow-y-auto px-3 py-2"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerLeave={onPointerUp}
+      >
+        <SwipeableList
+          items={items}
+          onAction={handleAction}
+          closeOnAction
+          classNames={{ surface: "!cursor-default bg-card shadow-sm dark:shadow-none" }}
+        />
+      </div>
+
+      <ConfirmDialog
+        open={!!accountToDelete}
+        onOpenChange={(open) => !open && setAccountToDelete(null)}
+        title="Delete Account"
+        description={`Delete "${accountToDelete?.issuer} - ${accountToDelete?.account}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={async () => {
+          if (accountToDelete) {
+            await deleteAccount(accountToDelete.id);
+            toastSuccess({ message: "Account deleted" });
+            setAccountToDelete(null);
+          }
+        }}
       />
-    </div>
+    </>
   );
 }

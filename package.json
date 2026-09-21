@@ -1,7 +1,7 @@
 {
   "name": "lightauth",
   "private": true,
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "A lightweight desktop authenticator for secure two-factor authentication.",
   "author": "Kumix Labs <hai@kumix.io>",
   "license": "MIT",

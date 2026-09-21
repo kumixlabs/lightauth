@@ -2,6 +2,20 @@
 
 All notable changes to LightAuth will be documented in this file.
 
+## 0.1.4
+
+### Features
+
+- Per-workspace export and import — backup or restore accounts for the active workspace as clean JSON without workspace metadata.
+- Integrated `@kumix/ui` `ConfirmDialog` for delete actions (replaces native OS dialogs).
+
+### Fixes & Improvements
+
+- Stop click event propagation on TOTP code button to prevent duplicate copy triggers.
+- Clearer visual indicator for read-only secret field during account editing.
+- Error toast notification when batch URI import fails completely.
+- Removed unused `dialog:allow-ask` capability.
+
 ## 0.1.3
 
 ### Fixes

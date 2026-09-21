@@ -14,6 +14,8 @@ import {
   vaultImport,
   workspaceCreate,
   workspaceDelete,
+  workspaceExport,
+  workspaceImport,
   workspaceList,
   workspaceUpdate,
 } from "@/lib/commands";
@@ -65,6 +67,8 @@ interface AppState {
   // Vault
   exportVault: (path: string) => Promise<void>;
   importVault: (path: string) => Promise<ImportResult>;
+  exportWorkspace: (workspaceId: string, path: string) => Promise<void>;
+  importWorkspace: (workspaceId: string, path: string) => Promise<ImportResult>;
 
   // Settings
   updateSettings: (patch: Partial<AppSettings>) => void;
@@ -188,6 +192,17 @@ export const useStore = create<AppState>()(
 
       importVault: async (path) => {
         const result = await vaultImport(path);
+        await get().loadWorkspaces();
+        await get().refreshCodes();
+        return result;
+      },
+
+      exportWorkspace: async (workspaceId, path) => {
+        await workspaceExport(workspaceId, path);
+      },
+
+      importWorkspace: async (workspaceId, path) => {
+        const result = await workspaceImport(workspaceId, path);
         await get().loadWorkspaces();
         await get().refreshCodes();
         return result;
