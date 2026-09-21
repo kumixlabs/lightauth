@@ -2,6 +2,21 @@
 
 All notable changes to LightAuth will be documented in this file.
 
+## 0.1.2
+
+### Fixes
+
+- Hide console window on Windows release build.
+- QR import now validates secret before saving.
+- `save_vault` propagates write errors instead of silently ignoring.
+- Guard against `period=0` division by zero in TOTP generator.
+- Typed `ImportResult` struct replaces untyped `serde_json::Value`.
+- Native Tauri confirm dialogs replace ugly browser `confirm()`.
+- Long-press reorder cancels on pointer movement (prevents accidental trigger during scroll).
+- Removed dead `totpGenerate` / `totpGenerateAll` commands.
+- Merged duplicate `loadAccounts` / `refreshCodes` store actions.
+- Version sync across all manifests (`package.json`, `tauri.conf.json`, `Cargo.toml`).
+
 ## 0.1.0
 
 Initial release.

@@ -8,7 +8,8 @@
 - `bun tauri build` — production build
 
 # Architecture
-- Product: LightAuth — lightweight offline desktop TOTP authenticator (PRD: LightAuth-PRD.md). Version source of truth: `package.json` (keep `src-tauri/tauri.conf.json` + `src-tauri/Cargo.toml` in sync on release).
+- Product: LightAuth — lightweight offline desktop TOTP authenticator (PRD: LightAuth-PRD.md).
+- Version: bump ALL three files together — `package.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`. Tauri reads version from `tauri.conf.json`; mismatched versions cause wrong release tags.
 - State: zustand store at src/stores/app-store.ts (persisted: activeWorkspaceId, settings)
 - Vault storage: plain JSON at `$APPDATA/lightauth/vault.json` (no encryption, no master password)
 - Rust backend: src-tauri/src/ — vault CRUD (vault/), TOTP generation (totp/), QR decode & URI parse (import/), Tauri commands (commands/), system tray (tray.rs)
