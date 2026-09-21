@@ -22,5 +22,7 @@
     "core:window:allow-unminimize",
     "core:window:allow-set-focus"
   ],
-  "windows": ["main"]
+  "windows": [
+    "main"
+  ]
 }

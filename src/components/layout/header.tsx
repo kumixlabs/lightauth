@@ -102,7 +102,7 @@ export function Header() {
           if (!v) setWorkspaceName("");
         }}
       >
-        <DialogContent className="max-w-[360px]">
+        <DialogContent className="max-w-90">
           <DialogHeader>
             <DialogTitle>New Workspace</DialogTitle>
           </DialogHeader>

@@ -96,10 +96,7 @@ export default function App() {
             <Plus className="size-4" />
             Add Account
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="center"
-            className="w-[calc(480px-1.5rem)] max-w-[calc(100vw-1.5rem)]"
-          >
+          <DropdownMenuContent align="center" className="w-114 max-w-[calc(100vw-1.5rem)]">
             <DropdownMenuItem onClick={() => setAddAccountOpen(true)}>
               <Plus className="mr-2 size-4" />
               Manual Entry

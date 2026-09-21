@@ -88,7 +88,7 @@ export function SettingsModal() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-h-[80vh] max-w-[420px] overflow-y-auto">
+      <DialogContent className="max-h-[80vh] max-w-105 overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
         </DialogHeader>

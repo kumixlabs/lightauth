@@ -73,7 +73,7 @@ export function ImportUriDialog({ open, onOpenChange }: ImportUriDialogProps) {
         }
       }}
     >
-      <DialogContent className="max-w-[420px]">
+      <DialogContent className="max-w-105">
         <DialogHeader>
           <DialogTitle>Import from URI</DialogTitle>
         </DialogHeader>
@@ -85,7 +85,7 @@ export function ImportUriDialog({ open, onOpenChange }: ImportUriDialogProps) {
               value={uris}
               onChange={(e) => setUris(e.target.value)}
               rows={5}
-              className="break-all font-mono text-xs [overflow-wrap:anywhere]"
+              className="wrap-anywhere break-all font-mono text-xs"
               autoFocus
             />
           </div>
