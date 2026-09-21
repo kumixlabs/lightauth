@@ -2,6 +2,12 @@
 
 All notable changes to LightAuth will be documented in this file.
 
+## 0.1.3
+
+### Fixes
+
+- Add `createUpdaterArtifacts: true` to bundle config — enables `.sig` files and `latest.json` generation for auto-updater.
+
 ## 0.1.2
 
 ### Fixes
