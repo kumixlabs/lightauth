@@ -1,0 +1,51 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "LightAuth",
+  "version": "0.1.0",
+  "identifier": "com.lightauth.app",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:8000",
+    "beforeDevCommand": "bun run dev",
+    "beforeBuildCommand": "bun run build"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "title": "LightAuth",
+        "width": 480,
+        "height": 720,
+        "minWidth": 480,
+        "minHeight": 720,
+        "maxWidth": 560,
+        "center": true,
+        "resizable": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost https://ipc.localhost"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "publisher": "Kumix Labs",
+    "homepage": "https://kumix.io",
+    "copyright": "© 2026 Kumix Labs",
+    "category": "Utility",
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": ["https://github.com/kumixlabs/lightauth/releases/latest/download/latest.json"],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IERFRDZEQjJGMUExMDdCMUIKUldRYmV4QWFMOXZXM3BLZS9CN1N5T3h1SEZZeGwvVFZmWXBSa0xhd2cxWU50R3RsYWFyWmtaWHEK"
+    }
+  }
+}
