@@ -91,8 +91,6 @@ jobs:
           args: ${{ matrix.args }}
           releaseAssetNamePattern: ${{ matrix.assetPattern }}
           uploadPlainBinary: ${{ matrix.uploadPlainBinary }}
-          includeUpdaterJson: true
-          updaterJsonPreferNsis: true
 
       - name: Upload Windows portable executable
         if: matrix.portableUpload
