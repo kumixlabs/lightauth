@@ -61,7 +61,7 @@ interface AppState {
   deleteAccount: (id: string) => Promise<void>;
   reorderAccounts: (ids: string[]) => Promise<void>;
   importUri: (uri: string) => Promise<void>;
-  importQr: (path: string) => Promise<void>;
+  importQr: (path: string) => Promise<ImportResult>;
   moveAccount: (id: string, workspaceId: string) => Promise<void>;
 
   // Vault
@@ -174,10 +174,11 @@ export const useStore = create<AppState>()(
 
       importQr: async (path) => {
         const { activeWorkspaceId } = get();
-        if (!activeWorkspaceId) return;
-        await accountImportQr(activeWorkspaceId, path);
+        if (!activeWorkspaceId) throw new Error("No active workspace");
+        const result = await accountImportQr(activeWorkspaceId, path);
         await get().refreshCodes();
         await get().loadWorkspaces();
+        return result;
       },
 
       moveAccount: async (id, workspaceId) => {

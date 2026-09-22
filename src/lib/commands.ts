@@ -40,6 +40,6 @@ export const accountReorder = (ids: string[]) => invoke<Account[]>("account_reor
 export const accountImportUri = (workspaceId: string, uri: string) =>
   invoke<Account>("account_import_uri", { workspaceId, uri });
 export const accountImportQr = (workspaceId: string, path: string) =>
-  invoke<Account>("account_import_qr", { workspaceId, path });
+  invoke<ImportResult>("account_import_qr", { workspaceId, path });
 export const accountMove = (id: string, workspaceId: string) =>
   invoke<Account>("account_move", { id, workspaceId });

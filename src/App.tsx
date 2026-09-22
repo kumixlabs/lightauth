@@ -76,8 +76,10 @@ export default function App() {
     });
     if (!path) return;
     try {
-      await importQr(path as string);
-      toastSuccess({ message: "Account imported from QR" });
+      const result = await importQr(path as string);
+      toastSuccess({
+        message: `Imported ${result.imported} account(s), skipped ${result.skipped}`,
+      });
     } catch (err) {
       toastError({ message: `QR import failed: ${err}` });
     }

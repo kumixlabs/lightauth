@@ -1,10 +1,13 @@
 use std::path::Path;
 
-use crate::vault::types::AccountInput;
+use crate::import::migration::parse_migration_uri;
 use crate::import::uri::parse_otpauth_uri;
+use crate::vault::types::AccountInput;
 
-/// Decode a QR code image file and parse the otpauth:// URI from it.
-pub fn decode_qr_image(path: &Path) -> Result<AccountInput, String> {
+/// Decode a QR code image file.
+/// Supports both standard `otpauth://totp/...` (single account)
+/// and Google Authenticator `otpauth-migration://offline?data=...` (multiple accounts).
+pub fn decode_qr_image(path: &Path) -> Result<Vec<AccountInput>, String> {
     let img = image::open(path)
         .map_err(|e| format!("Failed to open image: {e}"))?
         .to_luma8();
@@ -20,5 +23,9 @@ pub fn decode_qr_image(path: &Path) -> Result<AccountInput, String> {
         .decode()
         .map_err(|e| format!("Failed to decode QR: {e}"))?;
 
-    parse_otpauth_uri(&content)
+    if content.starts_with("otpauth-migration://") {
+        parse_migration_uri(&content)
+    } else {
+        parse_otpauth_uri(&content).map(|a| vec![a])
+    }
 }
