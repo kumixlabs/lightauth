@@ -2,6 +2,21 @@
 
 All notable changes to LightAuth will be documented in this file.
 
+## 0.1.5
+
+### Features
+
+- Google Authenticator migration QR import — decode `otpauth-migration://` protobuf format with batch multi-account import.
+- QR decode fallback chain — auto-retry with 2× and 3× upscale for low-quality phone photos.
+- Import progress dialog — loading spinner shown while decoding QR and importing accounts.
+
+### Fixes & Improvements
+
+- Copy button no longer triggers duplicate click events.
+- Secret field shows read-only label during account editing.
+- Error toast on complete URI batch import failure.
+- QR import returns detailed count (imported/skipped) instead of single account.
+
 ## 0.1.4
 
 ### Features

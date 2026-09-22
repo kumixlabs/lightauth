@@ -1,10 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { exit } from "@tauri-apps/plugin-process";
-import { ImagePlus, Link, Plus } from "lucide-react";
+import { ImagePlus, Link, Loader2, Plus } from "lucide-react";
 
 import { ToastContainer, toastError, toastSuccess } from "@kumix/ui/custom/toast";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@kumix/ui/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,6 +36,7 @@ export default function App() {
   const editingAccount = useStore((s) => s.editingAccount);
   const setEditingAccount = useStore((s) => s.setEditingAccount);
   const importQr = useStore((s) => s.importQr);
+  const [importing, setImporting] = useState(false);
 
   // Close / Tray behavior
   useEffect(() => {
@@ -75,6 +77,7 @@ export default function App() {
       multiple: false,
     });
     if (!path) return;
+    setImporting(true);
     try {
       const result = await importQr(path as string);
       toastSuccess({
@@ -82,6 +85,8 @@ export default function App() {
       });
     } catch (err) {
       toastError({ message: `QR import failed: ${err}` });
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -124,6 +129,19 @@ export default function App() {
       />
       <ImportUriDialog open={importUriOpen} onOpenChange={setImportUriOpen} />
       <SettingsModal />
+
+      {/* Import progress dialog */}
+      <Dialog open={importing} onOpenChange={() => {}}>
+        <DialogContent className="max-w-56 sm:max-w-56" showCloseButton={false}>
+          <div className="flex flex-col items-center gap-3 py-2">
+            <Loader2 className="size-8 animate-spin text-primary" />
+            <DialogTitle className="text-center font-medium text-sm">Importing...</DialogTitle>
+            <DialogDescription className="text-center text-muted-foreground text-xs">
+              Decoding QR and importing accounts
+            </DialogDescription>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <ToastContainer />
     </div>
