@@ -2,6 +2,23 @@
 
 All notable changes to LightAuth will be documented in this file.
 
+## 0.1.6
+
+### Features
+
+- Support text paste of Google Authenticator migration URIs (`otpauth-migration://offline?data=...`) in URI import dialog.
+- Frontend test suite with `bun test` covering secret sanitization, TOTP code formatting, and store actions.
+- Backend test suite with `cargo test` covering RFC 6238 TOTP generation, URI parsing, and protobuf migration decoding.
+- CI integration: automated test runs for both frontend and backend on PR and push.
+
+### Fixes & Improvements
+
+- Prevent accidental drag-and-drop reorder mode trigger when clicking, dragging, or scrolling with the scrollbar.
+- Atomic vault storage: write to `.tmp` and atomic rename to eliminate risk of vault corruption or 0-byte files on crash.
+- Full whitespace stripping on secrets at both Rust boundary and client form inputs (supports grouped Base32 strings like `JBSW Y3DP`).
+- Refactored QR decoding fallback chain to eliminate closure heap allocations and satisfy Clippy strict checks.
+- Unified `account_import_uri` return signature to return structured `ImportResult` (imported/skipped counts).
+
 ## 0.1.5
 
 ### Features

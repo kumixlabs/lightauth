@@ -29,22 +29,24 @@ export function ImportUriDialog({ open, onOpenChange }: ImportUriDialogProps) {
     const lines = uris
       .split("\n")
       .map((l) => l.trim())
-      .filter((l) => l.startsWith("otpauth://"));
+      .filter((l) => l.startsWith("otpauth://") || l.startsWith("otpauth-migration://"));
 
     if (lines.length === 0) {
-      setError("Paste at least one otpauth:// URI");
+      setError("Paste at least one otpauth:// or otpauth-migration:// URI");
       return;
     }
 
     setLoading(true);
     setError("");
     let imported = 0;
+    let skipped = 0;
     const errors: string[] = [];
 
     for (const uri of lines) {
       try {
-        await importUri(uri);
-        imported++;
+        const result = await importUri(uri);
+        imported += result.imported;
+        skipped += result.skipped;
       } catch (err) {
         errors.push(`${uri.slice(0, 40)}...: ${err}`);
       }
@@ -53,7 +55,9 @@ export function ImportUriDialog({ open, onOpenChange }: ImportUriDialogProps) {
     setLoading(false);
 
     if (imported > 0) {
-      toastSuccess({ message: `Imported ${imported} account(s)` });
+      toastSuccess({
+        message: `Imported ${imported} account(s)${skipped > 0 ? `, skipped ${skipped}` : ""}`,
+      });
       onOpenChange(false);
       setUris("");
     } else if (errors.length > 0) {
@@ -81,9 +85,9 @@ export function ImportUriDialog({ open, onOpenChange }: ImportUriDialogProps) {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div className="space-y-1.5">
-            <Label>otpauth:// URIs (one per line)</Label>
+            <Label>otpauth:// or otpauth-migration:// URIs (one per line)</Label>
             <Textarea
-              placeholder="otpauth://totp/GitHub:user?secret=JBSWY3DPEHPK3PXP&issuer=GitHub"
+              placeholder="otpauth://totp/GitHub:user?secret=JBSWY3DPEHPK3PXP&issuer=GitHub&#10;otpauth-migration://offline?data=..."
               value={uris}
               onChange={(e) => setUris(e.target.value)}
               rows={5}

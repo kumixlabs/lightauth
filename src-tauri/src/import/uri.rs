@@ -59,3 +59,42 @@ pub fn parse_otpauth_uri(uri: &str) -> Result<AccountInput, String> {
         period,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_standard_uri() {
+        let uri = "otpauth://totp/GitHub:octocat?secret=JBSWY3DPEHPK3PXP&issuer=GitHub&algorithm=SHA1&digits=6&period=30";
+        let res = parse_otpauth_uri(uri).unwrap();
+        assert_eq!(res.issuer, "GitHub");
+        assert_eq!(res.account, "octocat");
+        assert_eq!(res.secret, "JBSWY3DPEHPK3PXP");
+        assert_eq!(res.algorithm, "SHA1");
+        assert_eq!(res.digits, 6);
+        assert_eq!(res.period, 30);
+    }
+
+    #[test]
+    fn test_parse_uri_issuer_from_label() {
+        let uri = "otpauth://totp/Google:user@gmail.com?secret=JBSWY3DPEHPK3PXP";
+        let res = parse_otpauth_uri(uri).unwrap();
+        assert_eq!(res.issuer, "Google");
+        assert_eq!(res.account, "user@gmail.com");
+        assert_eq!(res.digits, 6);
+        assert_eq!(res.period, 30);
+    }
+
+    #[test]
+    fn test_parse_uri_missing_secret() {
+        let uri = "otpauth://totp/Test:user";
+        assert!(parse_otpauth_uri(uri).is_err());
+    }
+
+    #[test]
+    fn test_parse_uri_invalid_scheme() {
+        let uri = "https://example.com/totp?secret=JBSWY3DPEHPK3PXP";
+        assert!(parse_otpauth_uri(uri).is_err());
+    }
+}

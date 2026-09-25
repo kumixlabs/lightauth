@@ -12,18 +12,9 @@ import {
 } from "@kumix/ui/motion/swipeable-list";
 import { Button } from "@kumix/ui/ui/button";
 import { CountdownRing } from "@/components/shared/countdown-ring";
+import { formatCode, issuerInitial } from "@/lib/format";
 import { useStore } from "@/stores/app-store";
 import type { AccountWithCode } from "@/types";
-
-function formatCode(code: string): string {
-  if (code.length === 6) return `${code.slice(0, 3)} ${code.slice(3)}`;
-  if (code.length === 8) return `${code.slice(0, 4)} ${code.slice(4)}`;
-  return code;
-}
-
-function issuerInitial(issuer: string): string {
-  return issuer.charAt(0).toUpperCase();
-}
 
 const LONG_PRESS_MS = 500;
 
@@ -103,32 +94,50 @@ export function AccountList() {
     return () => window.removeEventListener("keydown", handler);
   }, [reordering]);
 
-  // Long press handlers — cancel if pointer moves (scroll/drag)
+  // Long press handlers — cancel if pointer moves, scrolls, or interacts with scrollbar/buttons
   const MOVE_THRESHOLD = 10;
 
+  const cancelLongPress = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = undefined;
+    }
+    pointerStart.current = null;
+  }, []);
+
   const onPointerDown = useCallback(
-    (e: React.PointerEvent) => {
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (e.button !== 0) return;
+
+      // Ignore scrollbar click (scrollbar gutter is beyond client dimensions)
+      const rect = e.currentTarget.getBoundingClientRect();
+      if (e.clientX >= rect.left + e.currentTarget.clientWidth) return;
+      if (e.clientY >= rect.top + e.currentTarget.clientHeight) return;
+
+      // Ignore sub-buttons (e.g. copy button)
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("button")) return;
+
+      // Only activate on account item
+      if (!target?.closest("[role='button']")) return;
+
       pointerStart.current = { x: e.clientX, y: e.clientY };
       longPressTimer.current = setTimeout(enterReorder, LONG_PRESS_MS);
     },
     [enterReorder],
   );
 
-  const onPointerMove = useCallback((e: React.PointerEvent) => {
-    if (!pointerStart.current || !longPressTimer.current) return;
-    const dx = e.clientX - pointerStart.current.x;
-    const dy = e.clientY - pointerStart.current.y;
-    if (Math.abs(dx) > MOVE_THRESHOLD || Math.abs(dy) > MOVE_THRESHOLD) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = undefined;
-    }
-  }, []);
-
-  const onPointerUp = useCallback(() => {
-    if (longPressTimer.current) clearTimeout(longPressTimer.current);
-    longPressTimer.current = undefined;
-    pointerStart.current = null;
-  }, []);
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!pointerStart.current || !longPressTimer.current) return;
+      const dx = e.clientX - pointerStart.current.x;
+      const dy = e.clientY - pointerStart.current.y;
+      if (Math.abs(dx) > MOVE_THRESHOLD || Math.abs(dy) > MOVE_THRESHOLD) {
+        cancelLongPress();
+      }
+    },
+    [cancelLongPress],
+  );
 
   // Cleanup auto-clear timer on unmount
   useEffect(() => {
@@ -307,8 +316,10 @@ export function AccountList() {
         className="flex-1 overflow-y-auto px-3 py-2"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerLeave={onPointerUp}
+        onPointerUp={cancelLongPress}
+        onPointerLeave={cancelLongPress}
+        onPointerCancel={cancelLongPress}
+        onScroll={cancelLongPress}
       >
         <SwipeableList
           items={items}

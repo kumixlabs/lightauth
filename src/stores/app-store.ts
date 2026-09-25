@@ -60,7 +60,7 @@ interface AppState {
   updateAccount: (id: string, patch: AccountPatch) => Promise<void>;
   deleteAccount: (id: string) => Promise<void>;
   reorderAccounts: (ids: string[]) => Promise<void>;
-  importUri: (uri: string) => Promise<void>;
+  importUri: (uri: string) => Promise<ImportResult>;
   importQr: (path: string) => Promise<ImportResult>;
   moveAccount: (id: string, workspaceId: string) => Promise<void>;
 
@@ -166,10 +166,11 @@ export const useStore = create<AppState>()(
 
       importUri: async (uri) => {
         const { activeWorkspaceId } = get();
-        if (!activeWorkspaceId) return;
-        await accountImportUri(activeWorkspaceId, uri);
+        if (!activeWorkspaceId) throw new Error("No active workspace");
+        const result = await accountImportUri(activeWorkspaceId, uri);
         await get().refreshCodes();
         await get().loadWorkspaces();
+        return result;
       },
 
       importQr: async (path) => {

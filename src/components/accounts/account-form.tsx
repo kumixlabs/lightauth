@@ -10,6 +10,7 @@ import {
 } from "@kumix/ui/ui/dialog";
 import { Input } from "@kumix/ui/ui/input";
 import { Label } from "@kumix/ui/ui/label";
+import { sanitizeSecret } from "@/lib/format";
 import { useStore } from "@/stores/app-store";
 import type { AccountWithCode } from "@/types";
 
@@ -48,7 +49,7 @@ export function AccountForm({ open, onOpenChange, account }: AccountFormProps) {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const cleanSecret = secret.replace(/\s+/g, "").toUpperCase();
+    const cleanSecret = sanitizeSecret(secret);
     if (!issuer.trim() || !cleanSecret) {
       setError("Issuer and secret are required");
       return;
@@ -112,7 +113,7 @@ export function AccountForm({ open, onOpenChange, account }: AccountFormProps) {
               id="secret"
               placeholder="JBSWY3DPEHPK3PXP"
               value={secret}
-              onChange={(e) => setSecret(e.target.value.replace(/\s+/g, "").toUpperCase())}
+              onChange={(e) => setSecret(sanitizeSecret(e.target.value))}
               className="font-mono text-sm"
               disabled={isEditing}
             />

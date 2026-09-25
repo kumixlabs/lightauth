@@ -10,40 +10,28 @@ use crate::vault::types::AccountInput;
 /// Supports both standard `otpauth://totp/...` (single account)
 /// and Google Authenticator `otpauth-migration://offline?data=...` (multiple accounts).
 ///
-/// Uses a fallback chain of image preprocessing strategies to handle
-/// low-quality photos (e.g. screenshots from phones):
+/// Uses sequential image preprocessing to handle low-quality photos:
 /// 1. Raw grayscale
-/// 2. 2× nearest-neighbor upscale
-/// 3. 3× Lanczos upscale (best quality, slower)
+/// 2. 2× nearest-neighbor upscale (fast)
+/// 3. 3× Lanczos upscale (high quality, fallback)
 pub fn decode_qr_image(path: &Path) -> Result<Vec<AccountInput>, String> {
     let img = image::open(path)
         .map_err(|e| format!("Failed to open image: {e}"))?;
 
-    let (w, h) = (img.width(), img.height());
     let luma = img.to_luma8();
+    if let Some(content) = try_decode_qr(&luma) {
+        return parse_qr_content(&content);
+    }
 
-    // ponytail: if this grows past ~4 strategies, switch to a config-driven loop
-    let strategies: Vec<(&str, Box<dyn Fn() -> GrayImage>)> = vec![
-        ("raw", Box::new({
-            let l = luma.clone();
-            move || l.clone()
-        })),
-        ("2x", Box::new({
-            let i = img.clone();
-            move || i.resize_exact(w * 2, h * 2, image::imageops::FilterType::Nearest).to_luma8()
-        })),
-        ("3x", Box::new({
-            let i = img.clone();
-            move || i.resize(w * 3, h * 3, image::imageops::FilterType::Lanczos3).to_luma8()
-        })),
-    ];
+    let (w, h) = (img.width(), img.height());
+    let upscale_2x = img.resize_exact(w * 2, h * 2, image::imageops::FilterType::Nearest).to_luma8();
+    if let Some(content) = try_decode_qr(&upscale_2x) {
+        return parse_qr_content(&content);
+    }
 
-    for (label, make_img) in &strategies {
-        let gray = make_img();
-        if let Some(content) = try_decode_qr(&gray) {
-            log::debug!("QR decoded with strategy: {label}");
-            return parse_qr_content(&content);
-        }
+    let upscale_3x = img.resize(w * 3, h * 3, image::imageops::FilterType::Lanczos3).to_luma8();
+    if let Some(content) = try_decode_qr(&upscale_3x) {
+        return parse_qr_content(&content);
     }
 
     Err("Could not decode QR code from image. Try a clearer photo with good lighting.".into())

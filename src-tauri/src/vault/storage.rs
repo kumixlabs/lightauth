@@ -25,6 +25,8 @@ pub fn load_vault() -> Vault {
 
 pub fn save_vault(vault: &Vault) -> Result<(), String> {
     let path = vault_path();
+    let tmp_path = path.with_extension("tmp");
     let data = serde_json::to_string_pretty(vault).map_err(|e| format!("Serialize error: {e}"))?;
-    fs::write(&path, data).map_err(|e| format!("Failed to save vault: {e}"))
+    fs::write(&tmp_path, data).map_err(|e| format!("Failed to write vault temp: {e}"))?;
+    fs::rename(&tmp_path, &path).map_err(|e| format!("Failed to save vault: {e}"))
 }

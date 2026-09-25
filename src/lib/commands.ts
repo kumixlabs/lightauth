@@ -38,7 +38,7 @@ export const accountUpdate = (id: string, patch: AccountPatch) =>
 export const accountDelete = (id: string) => invoke<void>("account_delete", { id });
 export const accountReorder = (ids: string[]) => invoke<Account[]>("account_reorder", { ids });
 export const accountImportUri = (workspaceId: string, uri: string) =>
-  invoke<Account>("account_import_uri", { workspaceId, uri });
+  invoke<ImportResult>("account_import_uri", { workspaceId, uri });
 export const accountImportQr = (workspaceId: string, path: string) =>
   invoke<ImportResult>("account_import_qr", { workspaceId, path });
 export const accountMove = (id: string, workspaceId: string) =>

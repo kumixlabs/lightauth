@@ -59,9 +59,8 @@ fn parse_migration_payload(data: &[u8]) -> Result<Vec<AccountInput>, String> {
             if end > data.len() {
                 return Err("Truncated protobuf".into());
             }
-            match parse_otp_parameters(&data[pos..end]) {
-                Ok(input) => accounts.push(input),
-                Err(_) => {} // skip unparseable entries
+            if let Ok(input) = parse_otp_parameters(&data[pos..end]) {
+                accounts.push(input);
             }
             pos = end;
         } else {
@@ -230,5 +229,25 @@ fn skip_field(data: &[u8], pos: usize, wire_type: u8) -> Result<usize, String> {
             Ok(pos + 4)
         }
         _ => Err(format!("Unknown wire type {wire_type}")),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_invalid_scheme() {
+        assert!(parse_migration_uri("otpauth://totp/foo").is_err());
+    }
+
+    #[test]
+    fn test_missing_data_param() {
+        assert!(parse_migration_uri("otpauth-migration://offline?foo=bar").is_err());
+    }
+
+    #[test]
+    fn test_invalid_base64() {
+        assert!(parse_migration_uri("otpauth-migration://offline?data=!!!invalid").is_err());
     }
 }

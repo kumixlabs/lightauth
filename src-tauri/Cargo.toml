@@ -1,6 +1,6 @@
 [package]
 name = "lightauth"
-version = "0.1.5"
+version = "0.1.6"
 description = "LightAuth - A lightweight desktop authenticator for secure two-factor authentication."
 authors = ["Kumix Labs"]
 license = "MIT"

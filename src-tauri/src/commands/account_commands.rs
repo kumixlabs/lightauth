@@ -145,22 +145,50 @@ pub fn account_import_uri(
     workspace_id: String,
     uri: String,
     state: State<AppState>,
-) -> Result<Account, String> {
-    let input = parse_otpauth_uri(&uri)?;
+) -> Result<ImportResult, String> {
+    let uri = uri.trim();
+    let inputs = if uri.starts_with("otpauth-migration://") {
+        crate::import::migration::parse_migration_uri(uri)?
+    } else {
+        vec![parse_otpauth_uri(uri)?]
+    };
+
     let mut vault = state.vault.lock().map_err(|e| e.to_string())?;
-    let max_order = vault
-        .accounts
-        .iter()
-        .filter(|a| a.workspace_id == workspace_id)
-        .map(|a| a.sort_order)
-        .max()
-        .unwrap_or(-1);
-    let mut account = input_to_account(input, &workspace_id);
-    account.sort_order = max_order + 1;
-    generate_code(&account.secret, &account.algorithm, account.digits, account.period)?;
-    vault.accounts.push(account.clone());
+    let mut imported: u32 = 0;
+    let mut skipped: u32 = 0;
+
+    for input in inputs {
+        let is_dup = vault.accounts.iter().any(|a| {
+            a.workspace_id == workspace_id
+                && a.issuer == input.issuer
+                && a.account == input.account
+                && a.secret.to_uppercase() == input.secret.to_uppercase()
+        });
+        if is_dup {
+            skipped += 1;
+            continue;
+        }
+
+        let max_order = vault
+            .accounts
+            .iter()
+            .filter(|a| a.workspace_id == workspace_id)
+            .map(|a| a.sort_order)
+            .max()
+            .unwrap_or(-1);
+        let mut account = input_to_account(input, &workspace_id);
+        account.sort_order = max_order + 1;
+        match generate_code(&account.secret, &account.algorithm, account.digits, account.period) {
+            Ok(_) => {
+                vault.accounts.push(account);
+                imported += 1;
+            }
+            Err(_) => skipped += 1,
+        }
+    }
+
     storage::save_vault(&vault)?;
-    Ok(account)
+    Ok(ImportResult { imported, skipped })
 }
 
 #[tauri::command]
