@@ -91,11 +91,11 @@ export function ImportUriDialog({ open, onOpenChange }: ImportUriDialogProps) {
               value={uris}
               onChange={(e) => setUris(e.target.value)}
               rows={5}
-              className="wrap-anywhere break-all font-mono text-xs"
+              className="font-mono text-xs wrap-anywhere break-all"
               autoFocus
             />
           </div>
-          {error && <p className="whitespace-pre-wrap text-destructive text-xs">{error}</p>}
+          {error && <p className="text-destructive text-xs whitespace-pre-wrap">{error}</p>}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel

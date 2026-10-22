@@ -46,7 +46,6 @@ cargo check          # in src-tauri/
 ## Project Rules
 
 Read [AGENTS.md](./AGENTS.md) for the full architecture notes. The non-negotiables:
-
 1. **Fully offline.** Zero network calls except optional updater check.
 2. **No encryption, no master password.** Vault is plain JSON — simplicity over complexity.
 3. **No new runtime dependency** unless stdlib/platform truly cannot do it.
@@ -65,7 +64,6 @@ docs: update README keyboard shortcuts
 ## Releases (Maintainers Only)
 
 Releases are automated via GitHub Actions (`.github/workflows/release.yml`):
-
 1. Bump version in **all three files** (kept in sync): `package.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`. Update `CHANGELOG.md`.
 2. Commit, tag `vX.Y.Z`, push. CI builds Windows (NSIS + portable), macOS (dmg x2), and Linux (AppImage + deb), signs updater artifacts, and publishes the GitHub Release.
 3. Users on older versions get the update via the built-in auto-updater.

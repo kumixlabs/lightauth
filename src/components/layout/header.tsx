@@ -52,12 +52,12 @@ export function Header() {
 
   return (
     <>
-      <header className="flex items-center justify-between border-border border-b bg-background/80 px-4 py-3 backdrop-blur-sm">
+      <header className="border-border bg-background/80 flex items-center justify-between border-b px-4 py-3 backdrop-blur-sm">
         <div className="flex min-w-0 items-center gap-2">
           <img src="/favicon.png" alt="LightAuth" className="size-5" />
-          <h1 className="font-semibold text-sm">LightAuth</h1>
+          <h1 className="text-sm font-semibold">LightAuth</h1>
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex min-w-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-0.5 text-muted-foreground text-xs hover:bg-accent hover:text-foreground">
+            <DropdownMenuTrigger className="text-muted-foreground hover:bg-accent hover:text-foreground flex min-w-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-0.5 text-xs">
               <span className="truncate">{activeWorkspace?.name ?? "—"}</span>
               <ChevronDown className="size-3 shrink-0" />
             </DropdownMenuTrigger>
@@ -70,7 +70,7 @@ export function Header() {
                 >
                   <span className="truncate">{ws.name}</span>
                   {ws.account_count !== undefined && (
-                    <span className="ml-2 font-mono text-muted-foreground text-xs">
+                    <span className="text-muted-foreground ml-2 font-mono text-xs">
                       {ws.account_count}
                     </span>
                   )}

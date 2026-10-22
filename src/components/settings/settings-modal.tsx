@@ -128,12 +128,12 @@ export function SettingsModal() {
           <div className="space-y-5">
             {/* Workspaces */}
             <section className="space-y-2">
-              <h3 className="font-semibold text-sm">Workspaces</h3>
+              <h3 className="text-sm font-semibold">Workspaces</h3>
               <div className="space-y-1">
                 {workspaces.map((ws) => (
                   <div
                     key={ws.id}
-                    className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent"
+                    className="hover:bg-accent flex items-center gap-2 rounded-md px-2 py-1.5 text-sm"
                   >
                     {editingWs?.id === ws.id ? (
                       <form
@@ -169,7 +169,7 @@ export function SettingsModal() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="size-6 text-destructive"
+                            className="text-destructive size-6"
                             onClick={() => handleDeleteWorkspace(ws)}
                           >
                             <Trash2 className="size-3" />
@@ -186,7 +186,7 @@ export function SettingsModal() {
 
             {/* Theme */}
             <section className="space-y-2">
-              <h3 className="font-semibold text-sm">Appearance</h3>
+              <h3 className="text-sm font-semibold">Appearance</h3>
               <div className="flex items-center justify-between">
                 <Label>Theme</Label>
                 <Select
@@ -209,12 +209,12 @@ export function SettingsModal() {
 
             {/* Backup */}
             <section className="space-y-3">
-              <h3 className="font-semibold text-sm">Backup</h3>
+              <h3 className="text-sm font-semibold">Backup</h3>
               {activeWorkspace && (
                 <div className="space-y-1.5">
                   <p className="text-muted-foreground text-xs">
                     Workspace:{" "}
-                    <span className="font-medium text-foreground">{activeWorkspace.name}</span>
+                    <span className="text-foreground font-medium">{activeWorkspace.name}</span>
                   </p>
                   <div className="flex gap-2">
                     <Button
@@ -263,7 +263,7 @@ export function SettingsModal() {
 
             {/* Behavior */}
             <section className="space-y-3">
-              <h3 className="font-semibold text-sm">Behavior</h3>
+              <h3 className="text-sm font-semibold">Behavior</h3>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm">Close to tray</p>
@@ -298,7 +298,7 @@ export function SettingsModal() {
               </div>
             </section>
             <section className="space-y-2">
-              <h3 className="font-semibold text-sm">Application & Updates</h3>
+              <h3 className="text-sm font-semibold">Application & Updates</h3>
               <UpdateCheckerRow />
             </section>
           </div>
@@ -366,11 +366,11 @@ function UpdateCheckerRow() {
     <div className="flex flex-col gap-2 py-1">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-muted/60">
-            <Sparkles className="size-4 text-muted-foreground" />
+          <div className="bg-muted/60 flex size-8 items-center justify-center rounded-lg">
+            <Sparkles className="text-muted-foreground size-4" />
           </div>
           <div>
-            <p className="font-medium text-sm">LightAuth v{__APP_VERSION__}</p>
+            <p className="text-sm font-medium">LightAuth v{__APP_VERSION__}</p>
             <p className="text-muted-foreground text-xs">
               {status === "checking" && "Checking for new releases..."}
               {status === "latest" && "You're on the latest version"}

@@ -91,7 +91,7 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen select-none flex-col bg-background text-foreground">
+    <div className="bg-background text-foreground flex h-screen flex-col select-none">
       <Header />
       <SearchBar />
       <AccountList />
@@ -99,7 +99,7 @@ export default function App() {
       {/* Bottom action bar */}
       <div className="border-border border-t p-3">
         <DropdownMenu>
-          <DropdownMenuTrigger className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-primary px-3 py-2 font-medium text-primary-foreground text-sm hover:bg-primary/90">
+          <DropdownMenuTrigger className="bg-primary text-primary-foreground hover:bg-primary/90 flex w-full cursor-pointer items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium">
             <Plus className="size-4" />
             Add Account
           </DropdownMenuTrigger>
@@ -134,9 +134,9 @@ export default function App() {
       <Dialog open={importing} onOpenChange={() => {}}>
         <DialogContent className="max-w-56 sm:max-w-56" showCloseButton={false}>
           <div className="flex flex-col items-center gap-3 py-2">
-            <Loader2 className="size-8 animate-spin text-primary" />
-            <DialogTitle className="text-center font-medium text-sm">Importing...</DialogTitle>
-            <DialogDescription className="text-center text-muted-foreground text-xs">
+            <Loader2 className="text-primary size-8 animate-spin" />
+            <DialogTitle className="text-center text-sm font-medium">Importing...</DialogTitle>
+            <DialogDescription className="text-muted-foreground text-center text-xs">
               Decoding QR and importing accounts
             </DialogDescription>
           </div>

@@ -10,7 +10,7 @@ export function SearchBar() {
 
   return (
     <div className="relative px-3 py-2">
-      <Search className="pointer-events-none absolute top-1/2 left-5 size-4 -translate-y-1/2 text-muted-foreground" />
+      <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-5 size-4 -translate-y-1/2" />
       <Input
         id="search-input"
         type="text"

@@ -7,7 +7,7 @@
 **Primary Audience:** Developers, power users, and anyone who needs
 TOTP authenticator codes on their desktop without reaching for a phone.
 
-------------------------------------------------------------------------
+---
 
 # 1. Product Overview
 
@@ -15,7 +15,6 @@ TOTP authenticator codes on their desktop without reaching for a phone.
 
 LightAuth is a lightweight, fully offline desktop TOTP authenticator — think
 **Google Authenticator, but on your laptop**:
-
 - Generates time-based one-time passwords (TOTP) for any service.
 - Organizes accounts into workspaces (e.g., "Personal", "Work", "Client X").
 - Imports accounts via `otpauth://` URI, QR code image, or manual entry.
@@ -40,12 +39,11 @@ form autofill, no password generation, no cloud sync, no master password.
 
 > Offline desktop TOTP authenticator with workspace organization.
 
-------------------------------------------------------------------------
+---
 
 # 2. Problem Statement
 
 Typical situations:
-
 - SSH into a server and need a 2FA code — phone is across the room.
 - Working in a VM or remote desktop — no phone camera for QR scan.
 - Managing dozens of 2FA accounts across personal and client projects.
@@ -59,7 +57,7 @@ LightAuth reduces this to:
 
 > **Open LightAuth → find account → click code → pasted.**
 
-------------------------------------------------------------------------
+---
 
 # 3. Product Goals
 
@@ -84,12 +82,11 @@ LightAuth reduces this to:
 4. System tray mode — minimize to tray, quick-access popup.
 5. Keyboard shortcuts for common actions (search, copy, switch workspace).
 
-------------------------------------------------------------------------
+---
 
 # 4. Non-Goals
 
 Explicitly outside the scope:
-
 - Password management of any kind.
 - Browser extension or autofill.
 - Cloud sync, cloud backup, remote accounts.
@@ -100,7 +97,7 @@ Explicitly outside the scope:
 - Multi-user / shared vaults.
 - Push notification–based 2FA.
 
-------------------------------------------------------------------------
+---
 
 # 5. Target Platform
 
@@ -120,7 +117,7 @@ GitHub Actions matrix (NSIS + portable exe, DMG per-arch, AppImage + deb).
 Platform-specific refinements as needed. No platform-specific complexity
 unless required for cross-platform parity.
 
-------------------------------------------------------------------------
+---
 
 # 6. Technology Stack
 
@@ -153,7 +150,7 @@ unless required for cross-platform parity.
 
 Use latest stable versions at implementation time.
 
-------------------------------------------------------------------------
+---
 
 # 7. Core Product Principles
 
@@ -184,7 +181,7 @@ codes render immediately on launch.
 Compact single-column layout. Header → Search → List. Keyboard-first where
 possible.
 
-------------------------------------------------------------------------
+---
 
 # 8. Data Model
 
@@ -221,7 +218,7 @@ Vault (single JSON file on disk)
 - No encryption — instant access on app launch.
 - Backup files: same JSON format, exported to user-chosen location.
 
-------------------------------------------------------------------------
+---
 
 # 9. Main User Workflows
 
@@ -281,7 +278,7 @@ Vault (single JSON file on disk)
 2. File picker → select backup file.
 3. Merge strategy: import all accounts, skip duplicates (matched by issuer + account + secret).
 
-------------------------------------------------------------------------
+---
 
 # 10. Application Layout
 
@@ -312,7 +309,6 @@ Vault (single JSON file on disk)
 
 **Fixed window width**: ~480px (compact, phone-like proportions on desktop).
 Max width constrained; not resizable beyond bounds. No sidebar.
-
 - **Header**: Logo on the left, settings icon (⚙) on the right.
 - **Search bar**: Below header, instant filter by issuer/account name.
 - **Account list**: Uses `SwipeableList` from `@kumix/ui/motion/swipeable-list`.
@@ -321,7 +317,7 @@ Max width constrained; not resizable beyond bounds. No sidebar.
 - Drag-and-drop reordering via long press or dedicated handle.
 - **Settings modal** (via ⚙ icon): workspace management (switch/add/delete), theme switcher.
 
-------------------------------------------------------------------------
+---
 
 # 11. Account List
 
@@ -352,7 +348,7 @@ Click on code area also copies to clipboard.
 
 - Search by issuer or account name (instant filter in search bar below header).
 
-------------------------------------------------------------------------
+---
 
 # 12. Security Model
 
@@ -367,59 +363,59 @@ Click on code area also copies to clipboard.
 - No secrets written to logs.
 - Secrets are never transmitted over the network.
 
-------------------------------------------------------------------------
+---
 
 # 13. Settings
 
-| Setting | Default | Options |
-|---|---|---|
-| Theme | System | Light / Dark / System |
-| Default digits | 6 | 6 / 8 |
-| Default algorithm | SHA1 | SHA1 / SHA256 / SHA512 |
-| Default period | 30s | 15 / 30 / 60 |
-| Start minimized | Off | On / Off |
-| Minimize to tray | On | On / Off |
-| Clipboard auto-clear | 30s | Off / 10 / 30 / 60s |
+| Setting              | Default | Options                |
+| -------------------- | ------- | ---------------------- |
+| Theme                | System  | Light / Dark / System  |
+| Default digits       | 6       | 6 / 8                  |
+| Default algorithm    | SHA1    | SHA1 / SHA256 / SHA512 |
+| Default period       | 30s     | 15 / 30 / 60           |
+| Start minimized      | Off     | On / Off               |
+| Minimize to tray     | On      | On / Off               |
+| Clipboard auto-clear | 30s     | Off / 10 / 30 / 60s    |
 
 Settings stored in a separate unencrypted config file
 (`~/.lightauth/config.json`) — no secrets in this file.
 
-------------------------------------------------------------------------
+---
 
 # 14. Keyboard Shortcuts
 
-| Action | Shortcut |
-|---|---|
-| Search accounts | `Ctrl+K` or `Ctrl+F` |
-| Add account (manual) | `Ctrl+N` |
-| Import URI | `Ctrl+I` |
-| Import QR image | `Ctrl+Q` |
-| Open settings | `Ctrl+,` |
-| Switch workspace 1–9 | `Ctrl+1` … `Ctrl+9` |
-| Copy selected code | `Enter` |
-| Navigate accounts | `↑` / `↓` |
+| Action               | Shortcut             |
+| -------------------- | -------------------- |
+| Search accounts      | `Ctrl+K` or `Ctrl+F` |
+| Add account (manual) | `Ctrl+N`             |
+| Import URI           | `Ctrl+I`             |
+| Import QR image      | `Ctrl+Q`             |
+| Open settings        | `Ctrl+,`             |
+| Switch workspace 1–9 | `Ctrl+1` … `Ctrl+9`  |
+| Copy selected code   | `Enter`              |
+| Navigate accounts    | `↑` / `↓`            |
 
-------------------------------------------------------------------------
+---
 
 # 15. Import & Export Formats
 
 ## 15.1 Import
 
-| Source | Format |
-|---|---|
-| `otpauth://` URI | Single or multi-line paste |
-| QR code image | PNG, JPG, BMP, WebP (decoded to `otpauth://` URI) |
-| Backup file | LightAuth `.lightauth-backup` JSON file |
-| Plain text | Future: CSV / JSON import for migration from other authenticators |
+| Source           | Format                                                            |
+| ---------------- | ----------------------------------------------------------------- |
+| `otpauth://` URI | Single or multi-line paste                                        |
+| QR code image    | PNG, JPG, BMP, WebP (decoded to `otpauth://` URI)                 |
+| Backup file      | LightAuth `.lightauth-backup` JSON file                           |
+| Plain text       | Future: CSV / JSON import for migration from other authenticators |
 
 ## 15.2 Export
 
-| Target | Format |
-|---|---|
-| Backup file | `.lightauth-backup` JSON file |
+| Target            | Format                                                                |
+| ----------------- | --------------------------------------------------------------------- |
+| Backup file       | `.lightauth-backup` JSON file                                         |
 | Plain text export | Future: CSV / JSON (requires explicit confirmation — secrets exposed) |
 
-------------------------------------------------------------------------
+---
 
 # 16. Tauri Backend Commands
 
@@ -456,7 +452,7 @@ totp_generate(account_id: String) → Result<TotpCode>
 totp_generate_all(workspace_id: String) → Result<Vec<AccountWithCode>>
 ```
 
-------------------------------------------------------------------------
+---
 
 # 17. Frontend Architecture
 
@@ -500,7 +496,7 @@ src/
     └── index.css               # Global styles, Tailwind imports
 ```
 
-------------------------------------------------------------------------
+---
 
 # 18. Rust Backend Architecture
 
@@ -528,7 +524,7 @@ src-tauri/src/
 └── state.rs                    # AppState (Mutex<Vault>)
 ```
 
-------------------------------------------------------------------------
+---
 
 # 19. Release Milestones
 
@@ -563,7 +559,7 @@ src-tauri/src/
 - Installer builds for Windows, macOS, Linux.
 - Auto-update via Tauri updater plugin.
 
-------------------------------------------------------------------------
+---
 
 # 20. Success Metrics
 
@@ -573,7 +569,7 @@ src-tauri/src/
 4. Binary size: < 15MB (Tauri target).
 5. Zero network calls in production builds.
 
-------------------------------------------------------------------------
+---
 
 # 21. Open Questions
 

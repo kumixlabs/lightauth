@@ -43,7 +43,7 @@ export function CountdownRing({ secondsRemaining, period, size = 24 }: Countdown
           className="transition-all duration-1000 ease-linear"
         />
       </svg>
-      <span className="w-4 text-right text-[10px] text-muted-foreground tabular-nums">
+      <span className="text-muted-foreground w-4 text-right text-[10px] tabular-nums">
         {secondsRemaining}
       </span>
     </div>

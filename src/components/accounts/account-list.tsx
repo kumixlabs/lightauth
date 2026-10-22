@@ -179,11 +179,11 @@ export function AccountList() {
   if (accounts.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
-        <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-          <Copy className="size-6 text-muted-foreground" />
+        <div className="bg-muted flex size-12 items-center justify-center rounded-full">
+          <Copy className="text-muted-foreground size-6" />
         </div>
-        <h3 className="mt-3 font-semibold text-sm">No accounts yet</h3>
-        <p className="mt-1 text-muted-foreground text-xs">
+        <h3 className="mt-3 text-sm font-semibold">No accounts yet</h3>
+        <p className="text-muted-foreground mt-1 text-xs">
           Add your first 2FA account using the + button above.
         </p>
       </div>
@@ -192,7 +192,7 @@ export function AccountList() {
 
   if (filteredAccounts.length === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center p-8 text-center text-muted-foreground text-sm">
+      <div className="text-muted-foreground flex flex-1 items-center justify-center p-8 text-center text-sm">
         No accounts matching &ldquo;{searchQuery}&rdquo;
       </div>
     );
@@ -202,8 +202,8 @@ export function AccountList() {
   if (reordering) {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
-        <div className="flex items-center justify-between border-border border-b bg-accent/50 px-4 py-2">
-          <span className="font-medium text-muted-foreground text-xs">
+        <div className="border-border bg-accent/50 flex items-center justify-between border-b px-4 py-2">
+          <span className="text-muted-foreground text-xs font-medium">
             Drag to reorder • Esc to cancel
           </span>
           <div className="flex gap-1.5">
@@ -229,15 +229,15 @@ export function AccountList() {
                 <Reorder.Item
                   key={id}
                   value={id}
-                  className="flex cursor-grab items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 shadow-sm active:cursor-grabbing active:shadow-md"
+                  className="border-border bg-card flex cursor-grab items-center gap-3 rounded-xl border px-3 py-2.5 shadow-sm active:cursor-grabbing active:shadow-md"
                 >
-                  <GripVertical className="size-4 shrink-0 text-muted-foreground" />
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 font-bold text-primary text-xs">
+                  <GripVertical className="text-muted-foreground size-4 shrink-0" />
+                  <div className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold">
                     {issuerInitial(a.issuer)}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-sm">{a.issuer}</p>
-                    <p className="truncate text-muted-foreground text-xs">{a.account}</p>
+                    <p className="truncate text-sm font-medium">{a.issuer}</p>
+                    <p className="text-muted-foreground truncate text-xs">{a.account}</p>
                   </div>
                 </Reorder.Item>
               );
@@ -255,7 +255,7 @@ export function AccountList() {
       id: a.id,
       content: (
         <div
-          className="flex min-w-0 flex-1 cursor-pointer select-none items-center gap-3"
+          className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 select-none"
           onClick={() => handleCopy(a.id, a.code)}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") handleCopy(a.id, a.code);
@@ -264,7 +264,7 @@ export function AccountList() {
           tabIndex={0}
         >
           <div
-            className={`flex size-9 shrink-0 items-center justify-center rounded-full font-bold text-sm transition-colors ${
+            className={`flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold transition-colors ${
               isCopied
                 ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                 : "bg-primary/10 text-primary"
@@ -273,8 +273,8 @@ export function AccountList() {
             {isCopied ? <Check className="size-4" /> : issuerInitial(a.issuer)}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate font-medium text-foreground text-sm">{a.issuer}</p>
-            <p className="truncate text-muted-foreground text-xs">{a.account}</p>
+            <p className="text-foreground truncate text-sm font-medium">{a.issuer}</p>
+            <p className="text-muted-foreground truncate text-xs">{a.account}</p>
           </div>
           <div
             className="flex shrink-0 items-center gap-2"
@@ -284,7 +284,7 @@ export function AccountList() {
           >
             <button
               type="button"
-              className={`cursor-pointer font-bold font-mono text-base tabular-nums tracking-wider transition-colors ${
+              className={`cursor-pointer font-mono text-base font-bold tracking-wider tabular-nums transition-colors ${
                 isCopied ? "text-emerald-600 dark:text-emerald-400" : "hover:text-primary"
               }`}
               onClick={(e) => {

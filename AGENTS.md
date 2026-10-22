@@ -1,4 +1,5 @@
 # Build & Test Commands
+
 - `bun install` — install dependencies
 - `bun run types:check` — TypeScript typecheck (`tsc -b`)
 - `bun run lint` — Biome lint check
@@ -12,6 +13,7 @@
 - `bun tauri build` — full production package build
 
 # Architecture & Tech Stack
+
 - **Product**: LightAuth — lightweight offline desktop TOTP authenticator (PRD: `LightAuth-PRD.md`).
 - **Frontend**: React 19 + TypeScript + Vite + Tailwind CSS v4 + `@kumix/ui` component library.
 - **Backend**: Tauri 2 (Rust) + `totp-rs` (code generation) + `rqrr` & `image` (QR decoding) + `data-encoding` (Base32/Base64).
@@ -26,6 +28,7 @@
 - **System Tray**: `src-tauri/src/tray.rs` with toggle window, show/hide, quit, and close-to-tray handling.
 
 # Import & Export Capabilities
+
 - **Google Authenticator Migration**:
   - Decodes `otpauth-migration://offline?data=...` format via manual protobuf decoder in `src-tauri/src/import/migration.rs`.
   - Zero external protobuf crate; relies on `data-encoding` crate.
@@ -39,6 +42,7 @@
   - Duplicate detection rule: skips import if account has matching issuer, account name, and secret (case-insensitive).
 
 # Key Project Rules
+
 - **Version bumps**: Always bump ALL THREE manifests together: `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml`. Tauri reads the version string from `tauri.conf.json`.
 - **Git tags**: The user pushes git tags manually. Never create or push git tags from assistant tools.
 - **Offline only**: Strictly zero outgoing/incoming network requests except the built-in Tauri updater check.
