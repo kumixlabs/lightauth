@@ -15,6 +15,7 @@ TOTP authenticator codes on their desktop without reaching for a phone.
 
 LightAuth is a lightweight, fully offline desktop TOTP authenticator — think
 **Google Authenticator, but on your laptop**:
+
 - Generates time-based one-time passwords (TOTP) for any service.
 - Organizes accounts into workspaces (e.g., "Personal", "Work", "Client X").
 - Imports accounts via `otpauth://` URI, QR code image, or manual entry.
@@ -44,6 +45,7 @@ form autofill, no password generation, no cloud sync, no master password.
 # 2. Problem Statement
 
 Typical situations:
+
 - SSH into a server and need a 2FA code — phone is across the room.
 - Working in a VM or remote desktop — no phone camera for QR scan.
 - Managing dozens of 2FA accounts across personal and client projects.
@@ -87,6 +89,7 @@ LightAuth reduces this to:
 # 4. Non-Goals
 
 Explicitly outside the scope:
+
 - Password management of any kind.
 - Browser extension or autofill.
 - Cloud sync, cloud backup, remote accounts.
@@ -309,6 +312,7 @@ Vault (single JSON file on disk)
 
 **Fixed window width**: ~480px (compact, phone-like proportions on desktop).
 Max width constrained; not resizable beyond bounds. No sidebar.
+
 - **Header**: Logo on the left, settings icon (⚙) on the right.
 - **Search bar**: Below header, instant filter by issuer/account name.
 - **Account list**: Uses `SwipeableList` from `@kumix/ui/motion/swipeable-list`.
@@ -326,6 +330,7 @@ Max width constrained; not resizable beyond bounds. No sidebar.
 Uses `SwipeableList` from `@kumix/ui/motion/swipeable-list`.
 
 Each row (`SwipeableListItem`) renders:
+
 - **leading**: Issuer icon (favicon or first-letter avatar)
 - **title**: Issuer name
 - **description**: Account name (email/username)
@@ -333,6 +338,7 @@ Each row (`SwipeableListItem`) renders:
 - **content** (custom via `renderItem`): code + circular countdown ring
 
 Swipe actions:
+
 - **Right actions** (swipe left to reveal): Edit, Delete
 - **Left actions** (swipe right to reveal): Copy Code
 
