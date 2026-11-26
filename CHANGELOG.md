@@ -2,7 +2,30 @@
 
 All notable changes to LightAuth will be documented in this file.
 
-## 0.1.6
+## 0.1.7 - 26-11-2026
+
+### Features
+
+- Single instance — relaunching LightAuth focuses the running window instead of opening a duplicate.
+- Auto-update — silent check on launch with background download & install, toggleable in Settings; manual check and install remain available.
+- Auto-update now also ships macOS updater artifacts (`.app.tar.gz`).
+- Phone-photo QR decoding via `quircs` fallback with perspective correction — angled or blurry photos that `rqrr` cannot read now import.
+- Import URI and account form dialogs are scrollable on small windows.
+
+### Fixes & Improvements
+
+- Accept 80-bit (10-byte) TOTP seeds — GitHub, PayPal, OVH and other services with short secrets no longer fail with `SecretTooSmall`.
+- Parse percent-encoded `Issuer%3Aaccount` labels (Google Authenticator, Aegis, 2FAS exports) — issuer no longer glued to the account name.
+- Fix crash on malformed or truncated Google Authenticator migration payloads (bounds-checked protobuf decoding).
+- Fix a corrupt vault silently resetting to an empty vault — the corrupt file is preserved as `vault.json.bak`.
+- Skip MD5 migration entries instead of generating wrong codes; reject `digits` outside 6–8.
+- Validate secrets on full vault import and account edits; case-insensitive duplicate detection on every import path.
+- Pause TOTP polling while the window is hidden.
+- Error toasts for export and workspace create/update failures instead of silent failures.
+- Remove system tray, close-to-tray and start-minimized settings — closing the window now quits LightAuth.
+- Remove unused commands, window permissions, and the unused log/opener plugins; deduplicate import logic between URI and QR paths.
+
+## 0.1.6 - 25-09-2026
 
 ### Features
 
@@ -19,7 +42,7 @@ All notable changes to LightAuth will be documented in this file.
 - Refactored QR decoding fallback chain to eliminate closure heap allocations and satisfy Clippy strict checks.
 - Unified `account_import_uri` return signature to return structured `ImportResult` (imported/skipped counts).
 
-## 0.1.5
+## 0.1.5 - 22-09-2026
 
 ### Features
 
@@ -34,7 +57,7 @@ All notable changes to LightAuth will be documented in this file.
 - Error toast on complete URI batch import failure.
 - QR import returns detailed count (imported/skipped) instead of single account.
 
-## 0.1.4
+## 0.1.4 - 21-09-2026
 
 ### Features
 
@@ -48,13 +71,13 @@ All notable changes to LightAuth will be documented in this file.
 - Error toast notification when batch URI import fails completely.
 - Removed unused `dialog:allow-ask` capability.
 
-## 0.1.3
+## 0.1.3 - 21-09-2026
 
 ### Fixes
 
 - Add `createUpdaterArtifacts: true` to bundle config — enables `.sig` files and `latest.json` generation for auto-updater.
 
-## 0.1.2
+## 0.1.2 - 21-09-2026
 
 ### Fixes
 
@@ -69,7 +92,7 @@ All notable changes to LightAuth will be documented in this file.
 - Merged duplicate `loadAccounts` / `refreshCodes` store actions.
 - Version sync across all manifests (`package.json`, `tauri.conf.json`, `Cargo.toml`).
 
-## 0.1.0
+## 0.1.0 - 21-09-2026
 
 Initial release.
 

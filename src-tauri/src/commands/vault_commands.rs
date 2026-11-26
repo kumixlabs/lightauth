@@ -1,22 +1,9 @@
 use tauri::State;
 
 use crate::state::AppState;
+use crate::totp::generator::{generate_code, sanitize_secret};
 use crate::vault::storage;
 use crate::vault::types::ImportResult;
-
-#[tauri::command]
-pub fn vault_exists() -> bool {
-    storage::vault_path().exists()
-}
-
-#[tauri::command]
-pub fn vault_init(state: State<AppState>) -> Result<(), String> {
-    let vault = crate::vault::types::Vault::default();
-    storage::save_vault(&vault)?;
-    let mut v = state.vault.lock().map_err(|e| e.to_string())?;
-    *v = vault;
-    Ok(())
-}
 
 #[tauri::command]
 pub fn vault_export(path: String, state: State<AppState>) -> Result<(), String> {
@@ -36,31 +23,55 @@ pub fn vault_import(path: String, state: State<AppState>) -> Result<ImportResult
     let mut imported = 0u32;
     let mut skipped = 0u32;
 
-    for account in incoming.accounts {
+    for mut account in incoming.accounts {
+        let clean_secret = sanitize_secret(&account.secret);
+
+        // Skip invalid secrets (same rule as workspace import)
+        if generate_code(
+            &clean_secret,
+            &account.algorithm,
+            account.digits,
+            account.period,
+        )
+        .is_err()
+        {
+            skipped += 1;
+            continue;
+        }
+
+        // Duplicate detection: issuer + account + secret, case-insensitive
         let exists = vault.accounts.iter().any(|a| {
             a.issuer == account.issuer
                 && a.account == account.account
-                && a.secret == account.secret
+                && sanitize_secret(&a.secret) == clean_secret
         });
         if exists {
             skipped += 1;
-        } else {
-            // Ensure workspace exists
-            if !vault.workspaces.iter().any(|w| w.id == account.workspace_id) {
-                // Find matching workspace from incoming by id, or use first workspace
-                if let Some(iw) = incoming.workspaces.iter().find(|w| w.id == account.workspace_id) {
-                    vault.workspaces.push(iw.clone());
-                } else if let Some(first) = vault.workspaces.first() {
-                    let mut a = account.clone();
-                    a.workspace_id = first.id.clone();
-                    vault.accounts.push(a);
-                    imported += 1;
-                    continue;
-                }
-            }
-            vault.accounts.push(account);
-            imported += 1;
+            continue;
         }
+        account.secret = clean_secret;
+
+        // Ensure workspace exists
+        if !vault
+            .workspaces
+            .iter()
+            .any(|w| w.id == account.workspace_id)
+        {
+            if let Some(iw) = incoming
+                .workspaces
+                .iter()
+                .find(|w| w.id == account.workspace_id)
+            {
+                vault.workspaces.push(iw.clone());
+            } else if let Some(first) = vault.workspaces.first() {
+                account.workspace_id = first.id.clone();
+            } else {
+                skipped += 1; // nowhere to place the account
+                continue;
+            }
+        }
+        vault.accounts.push(account);
+        imported += 1;
     }
 
     storage::save_vault(&vault)?;

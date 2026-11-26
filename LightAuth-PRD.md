@@ -81,8 +81,7 @@ LightAuth reduces this to:
 1. Bulk import/export of accounts.
 2. Drag-and-drop reordering of accounts.
 3. Customizable appearance (theme).
-4. System tray mode — minimize to tray, quick-access popup.
-5. Keyboard shortcuts for common actions (search, copy, switch workspace).
+4. Keyboard shortcuts for common actions (search, copy, switch workspace).
 
 ---
 
@@ -379,8 +378,7 @@ Click on code area also copies to clipboard.
 | Default digits       | 6       | 6 / 8                  |
 | Default algorithm    | SHA1    | SHA1 / SHA256 / SHA512 |
 | Default period       | 30s     | 15 / 30 / 60           |
-| Start minimized      | Off     | On / Off               |
-| Minimize to tray     | On      | On / Off               |
+| Auto-update          | On      | On / Off               |
 | Clipboard auto-clear | 30s     | Off / 10 / 30 / 60s    |
 
 Settings stored in a separate unencrypted config file
@@ -555,7 +553,6 @@ src-tauri/src/
 
 - Vault export/import (JSON backup).
 - Clipboard auto-clear.
-- System tray with minimize-to-tray.
 - Keyboard shortcuts.
 - Settings panel.
 
@@ -579,9 +576,8 @@ src-tauri/src/
 
 # 21. Open Questions
 
-1. **Tray icon behavior:** Always show in tray, or only when minimized?
-2. **Multi-vault support:** Single vault per user, or allow multiple vault files?
-3. **Issuer icons:** Bundle common issuer icons, or generate from first letter only?
-4. **Accessibility:** Screen reader support for countdown timers — announce when code refreshes?
-5. **Optional encryption:** Add opt-in master password in future version for users who want extra security?
-6. **Group feature:** Add sub-grouping within workspaces in future version?
+1. **Multi-vault support:** Single vault per user, or allow multiple vault files?
+2. **Issuer icons:** Bundle common issuer icons, or generate from first letter only?
+3. **Accessibility:** Screen reader support for countdown timers — announce when code refreshes?
+4. **Optional encryption:** Add opt-in master password in future version for users who want extra security?
+5. **Group feature:** Add sub-grouping within workspaces in future version?

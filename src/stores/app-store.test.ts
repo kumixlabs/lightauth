@@ -30,7 +30,21 @@ describe("app-store", () => {
     expect(state.searchQuery).toBe("");
     expect(state.settings.theme).toBe("system");
     expect(state.settings.clipboardAutoClear).toBe(30);
-    expect(state.settings.minimizeToTray).toBe(true);
+    expect(state.settings.autoUpdate).toBe(true);
+  });
+
+  it("fills new setting keys from defaults when persisted state is older", async () => {
+    // Simulate a user upgrading from a version without `autoUpdate`
+    storage["lightauth-store"] = JSON.stringify({
+      state: { activeWorkspaceId: null, settings: { theme: "dark", clipboardAutoClear: 15 } },
+      version: 0,
+    });
+    await useStore.persist.rehydrate();
+    expect(useStore.getState().settings).toEqual({
+      theme: "dark",
+      clipboardAutoClear: 15,
+      autoUpdate: true,
+    });
   });
 
   it("updates search query", () => {
@@ -42,7 +56,7 @@ describe("app-store", () => {
   it("updates settings partially", () => {
     useStore.getState().updateSettings({ clipboardAutoClear: 15 });
     expect(useStore.getState().settings.clipboardAutoClear).toBe(15);
-    expect(useStore.getState().settings.minimizeToTray).toBe(true);
+    expect(useStore.getState().settings.autoUpdate).toBe(true);
     // revert
     useStore.getState().updateSettings({ clipboardAutoClear: 30 });
   });

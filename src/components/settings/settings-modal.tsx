@@ -51,9 +51,14 @@ export function SettingsModal() {
       setEditingWs(null);
       return;
     }
-    await updateWorkspace(editingWs.id, editName.trim());
-    setEditingWs(null);
-    toastSuccess({ message: "Workspace updated" });
+    try {
+      await updateWorkspace(editingWs.id, editName.trim());
+      toastSuccess({ message: "Workspace updated" });
+    } catch (err) {
+      toastError({ message: `Failed to update workspace: ${err}` });
+    } finally {
+      setEditingWs(null);
+    }
   };
 
   const handleDeleteWorkspace = (ws: Workspace) => {
@@ -71,8 +76,12 @@ export function SettingsModal() {
       filters: [{ name: "JSON", extensions: ["json"] }],
     });
     if (!path) return;
-    await exportVault(path);
-    toastSuccess({ message: "Full vault exported" });
+    try {
+      await exportVault(path);
+      toastSuccess({ message: "Full vault exported" });
+    } catch (err) {
+      toastError({ message: `Vault export failed: ${err}` });
+    }
   };
 
   const handleImportVault = async () => {
@@ -98,8 +107,12 @@ export function SettingsModal() {
       filters: [{ name: "JSON", extensions: ["json"] }],
     });
     if (!path) return;
-    await exportWorkspace(activeWorkspace.id, path);
-    toastSuccess({ message: `Workspace "${activeWorkspace.name}" exported` });
+    try {
+      await exportWorkspace(activeWorkspace.id, path);
+      toastSuccess({ message: `Workspace "${activeWorkspace.name}" exported` });
+    } catch (err) {
+      toastError({ message: `Workspace export failed: ${err}` });
+    }
   };
 
   const handleImportWorkspace = async () => {
@@ -266,18 +279,6 @@ export function SettingsModal() {
               <h3 className="text-sm font-semibold">Behavior</h3>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm">Close to tray</p>
-                  <p className="text-muted-foreground text-xs">
-                    Minimize to system tray instead of quitting
-                  </p>
-                </div>
-                <Switch
-                  checked={settings.minimizeToTray}
-                  onCheckedChange={(v) => updateSettings({ minimizeToTray: v })}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
                   <p className="text-sm">Auto-clear clipboard</p>
                   <p className="text-muted-foreground text-xs">Clear copied code after delay</p>
                 </div>
@@ -299,6 +300,18 @@ export function SettingsModal() {
             </section>
             <section className="space-y-2">
               <h3 className="text-sm font-semibold">Application & Updates</h3>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm">Auto-update</p>
+                  <p className="text-muted-foreground text-xs">
+                    Check on launch, download &amp; install in the background
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.autoUpdate}
+                  onCheckedChange={(v) => updateSettings({ autoUpdate: v })}
+                />
+              </div>
               <UpdateCheckerRow />
             </section>
           </div>

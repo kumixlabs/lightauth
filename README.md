@@ -13,7 +13,7 @@ A lightweight, offline-first desktop 2FA authenticator built with Tauri 2, Rust,
 - **Easy Import** — Import via standard `otpauth://` URI, Google Authenticator export QR / URI (`otpauth-migration://`), or QR code image files with automatic multi-resolution enhancement.
 - **One-Click Copy & Visual Feedback** — Click anywhere on an account card to copy the code. Animated check icon and emerald feedback.
 - **Clipboard Auto-Clear** — Automatically clears 2FA codes from your clipboard after a configurable timer (15s, 30s, 60s, or disabled).
-- **System Tray Support** — Minimize to tray on close, left-click to toggle, right-click menu to show or quit.
+- **Auto-Update** — Checks for updates on launch and installs silently in the background (can be disabled).
 - **Gestures & Drag Reorder** — Swipe right to copy, swipe left to edit or delete. Long press (500ms) to enter drag-and-drop reorder mode.
 - **Theme Support** — System, Light, and Dark modes.
 - **Backup & Restore** — Full vault backup or per-workspace JSON export and import for seamless migrations.

@@ -81,8 +81,7 @@ interface AppState {
 const defaultSettings: AppSettings = {
   theme: "system",
   clipboardAutoClear: 30,
-  startMinimized: false,
-  minimizeToTray: true,
+  autoUpdate: true,
 };
 
 export const useStore = create<AppState>()(
@@ -224,6 +223,12 @@ export const useStore = create<AppState>()(
         activeWorkspaceId: state.activeWorkspaceId,
         settings: state.settings,
       }),
+      // Deep-merge settings so keys added in newer versions keep their defaults
+      // instead of becoming `undefined` for users with older persisted state.
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<AppState>;
+        return { ...current, ...p, settings: { ...current.settings, ...p.settings } };
+      },
     },
   ),
 );

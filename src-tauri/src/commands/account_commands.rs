@@ -5,9 +5,11 @@ use tauri::State;
 use crate::import::qr::decode_qr_image;
 use crate::import::uri::parse_otpauth_uri;
 use crate::state::AppState;
-use crate::totp::generator::generate_code;
+use crate::totp::generator::{generate_code, sanitize_secret};
 use crate::vault::storage;
-use crate::vault::types::{Account, AccountPatch, AccountInput, AccountWithCode, ImportResult};
+use crate::vault::types::{
+    Account, AccountInput, AccountPatch, AccountWithCode, ImportResult, Vault,
+};
 
 fn input_to_account(input: AccountInput, workspace_id: &str) -> Account {
     let now = chrono::Utc::now().to_rfc3339();
@@ -57,6 +59,56 @@ pub fn account_list(
     Ok(accounts.iter().map(|a| account_with_code(a)).collect())
 }
 
+/// Shared import loop for URI/QR imports: sanitizes the secret,
+/// skips duplicates, assigns sort order, validates generation.
+pub fn import_accounts(
+    vault: &mut Vault,
+    workspace_id: &str,
+    inputs: Vec<AccountInput>,
+) -> ImportResult {
+    let mut imported = 0u32;
+    let mut skipped = 0u32;
+
+    for mut input in inputs {
+        input.secret = sanitize_secret(&input.secret);
+
+        let is_dup = vault.accounts.iter().any(|a| {
+            a.workspace_id == workspace_id
+                && a.issuer == input.issuer
+                && a.account == input.account
+                && a.secret.to_uppercase() == input.secret
+        });
+        if is_dup {
+            skipped += 1;
+            continue;
+        }
+
+        let max_order = vault
+            .accounts
+            .iter()
+            .filter(|a| a.workspace_id == workspace_id)
+            .map(|a| a.sort_order)
+            .max()
+            .unwrap_or(-1);
+        let mut account = input_to_account(input, workspace_id);
+        account.sort_order = max_order + 1;
+        match generate_code(
+            &account.secret,
+            &account.algorithm,
+            account.digits,
+            account.period,
+        ) {
+            Ok(_) => {
+                vault.accounts.push(account);
+                imported += 1;
+            }
+            Err(_) => skipped += 1,
+        }
+    }
+
+    ImportResult { imported, skipped }
+}
+
 #[tauri::command]
 pub fn account_create(
     workspace_id: String,
@@ -74,7 +126,12 @@ pub fn account_create(
     let mut account = input_to_account(input, &workspace_id);
     account.sort_order = max_order + 1;
     // Validate secret can generate a code
-    generate_code(&account.secret, &account.algorithm, account.digits, account.period)?;
+    generate_code(
+        &account.secret,
+        &account.algorithm,
+        account.digits,
+        account.period,
+    )?;
     vault.accounts.push(account.clone());
     storage::save_vault(&vault)?;
     Ok(account)
@@ -87,30 +144,45 @@ pub fn account_update(
     state: State<AppState>,
 ) -> Result<Account, String> {
     let mut vault = state.vault.lock().map_err(|e| e.to_string())?;
+
+    // Validate the patched values BEFORE mutating: on Err the in-memory
+    // vault must stay untouched
+    let (secret, algorithm, digits, period) = {
+        let account = vault
+            .accounts
+            .iter()
+            .find(|a| a.id == id)
+            .ok_or("Account not found")?;
+        (
+            patch
+                .secret
+                .clone()
+                .unwrap_or_else(|| account.secret.clone()),
+            patch
+                .algorithm
+                .clone()
+                .unwrap_or_else(|| account.algorithm.clone()),
+            patch.digits.unwrap_or(account.digits),
+            patch.period.unwrap_or(account.period),
+        )
+    };
+    generate_code(&secret, &algorithm, digits, period)?;
+
     let account = vault
         .accounts
         .iter_mut()
         .find(|a| a.id == id)
         .ok_or("Account not found")?;
-
     if let Some(issuer) = patch.issuer {
         account.issuer = issuer;
     }
     if let Some(name) = patch.account {
         account.account = name;
     }
-    if let Some(secret) = patch.secret {
-        account.secret = secret;
-    }
-    if let Some(algorithm) = patch.algorithm {
-        account.algorithm = algorithm;
-    }
-    if let Some(digits) = patch.digits {
-        account.digits = digits;
-    }
-    if let Some(period) = patch.period {
-        account.period = period;
-    }
+    account.secret = secret;
+    account.algorithm = algorithm;
+    account.digits = digits;
+    account.period = period;
     account.updated_at = chrono::Utc::now().to_rfc3339();
     let result = account.clone();
     storage::save_vault(&vault)?;
@@ -126,10 +198,7 @@ pub fn account_delete(id: String, state: State<AppState>) -> Result<(), String> 
 }
 
 #[tauri::command]
-pub fn account_reorder(
-    ids: Vec<String>,
-    state: State<AppState>,
-) -> Result<Vec<Account>, String> {
+pub fn account_reorder(ids: Vec<String>, state: State<AppState>) -> Result<Vec<Account>, String> {
     let mut vault = state.vault.lock().map_err(|e| e.to_string())?;
     for (i, id) in ids.iter().enumerate() {
         if let Some(a) = vault.accounts.iter_mut().find(|a| &a.id == id) {
@@ -154,41 +223,9 @@ pub fn account_import_uri(
     };
 
     let mut vault = state.vault.lock().map_err(|e| e.to_string())?;
-    let mut imported: u32 = 0;
-    let mut skipped: u32 = 0;
-
-    for input in inputs {
-        let is_dup = vault.accounts.iter().any(|a| {
-            a.workspace_id == workspace_id
-                && a.issuer == input.issuer
-                && a.account == input.account
-                && a.secret.to_uppercase() == input.secret.to_uppercase()
-        });
-        if is_dup {
-            skipped += 1;
-            continue;
-        }
-
-        let max_order = vault
-            .accounts
-            .iter()
-            .filter(|a| a.workspace_id == workspace_id)
-            .map(|a| a.sort_order)
-            .max()
-            .unwrap_or(-1);
-        let mut account = input_to_account(input, &workspace_id);
-        account.sort_order = max_order + 1;
-        match generate_code(&account.secret, &account.algorithm, account.digits, account.period) {
-            Ok(_) => {
-                vault.accounts.push(account);
-                imported += 1;
-            }
-            Err(_) => skipped += 1,
-        }
-    }
-
+    let result = import_accounts(&mut vault, &workspace_id, inputs);
     storage::save_vault(&vault)?;
-    Ok(ImportResult { imported, skipped })
+    Ok(result)
 }
 
 #[tauri::command]
@@ -199,42 +236,9 @@ pub fn account_import_qr(
 ) -> Result<ImportResult, String> {
     let inputs = decode_qr_image(&PathBuf::from(&path))?;
     let mut vault = state.vault.lock().map_err(|e| e.to_string())?;
-    let mut imported: u32 = 0;
-    let mut skipped: u32 = 0;
-
-    for input in inputs {
-        // Skip duplicates (same issuer + account + secret)
-        let is_dup = vault.accounts.iter().any(|a| {
-            a.workspace_id == workspace_id
-                && a.issuer == input.issuer
-                && a.account == input.account
-                && a.secret.to_uppercase() == input.secret.to_uppercase()
-        });
-        if is_dup {
-            skipped += 1;
-            continue;
-        }
-
-        let max_order = vault
-            .accounts
-            .iter()
-            .filter(|a| a.workspace_id == workspace_id)
-            .map(|a| a.sort_order)
-            .max()
-            .unwrap_or(-1);
-        let mut account = input_to_account(input, &workspace_id);
-        account.sort_order = max_order + 1;
-        match generate_code(&account.secret, &account.algorithm, account.digits, account.period) {
-            Ok(_) => {
-                vault.accounts.push(account);
-                imported += 1;
-            }
-            Err(_) => skipped += 1,
-        }
-    }
-
+    let result = import_accounts(&mut vault, &workspace_id, inputs);
     storage::save_vault(&vault)?;
-    Ok(ImportResult { imported, skipped })
+    Ok(result)
 }
 
 #[tauri::command]

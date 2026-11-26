@@ -18,11 +18,18 @@ export function useTotp() {
     refreshCodes();
 
     intervalRef.current = setInterval(() => {
+      if (document.hidden) return; // pause IPC polling while window is minimized/occluded
       refreshCodes();
     }, 1000);
 
+    const onVisible = () => {
+      if (!document.hidden) refreshCodes();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [activeWorkspaceId, refreshCodes]);
 }

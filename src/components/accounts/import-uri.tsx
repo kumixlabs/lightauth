@@ -79,7 +79,7 @@ export function ImportUriDialog({ open, onOpenChange }: ImportUriDialogProps) {
         }
       }}
     >
-      <DialogContent className="max-w-105">
+      <DialogContent className="max-h-[80vh] max-w-105 overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Import from URI</DialogTitle>
         </DialogHeader>

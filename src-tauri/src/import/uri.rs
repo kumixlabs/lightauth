@@ -13,14 +13,14 @@ pub fn parse_otpauth_uri(uri: &str) -> Result<AccountInput, String> {
         return Err("Only TOTP URIs are supported".into());
     }
 
-    let label = url.path().trim_start_matches('/');
-    let (issuer_from_label, account_name) = if let Some(idx) = label.find(':') {
-        (
-            urlencoding::decode(&label[..idx]).unwrap_or_default().to_string(),
-            urlencoding::decode(&label[idx + 1..]).unwrap_or_default().to_string(),
-        )
-    } else {
-        (String::new(), urlencoding::decode(label).unwrap_or_default().to_string())
+    // Decode the whole label first: exporters (Google Authenticator, Aegis,
+    // 2FAS) percent-encode the `Issuer:account` separator as %3A.
+    let label = urlencoding::decode(url.path().trim_start_matches('/'))
+        .unwrap_or_default()
+        .to_string();
+    let (issuer_from_label, account_name) = match label.find(':') {
+        Some(idx) => (label[..idx].to_string(), label[idx + 1..].to_string()),
+        None => (String::new(), label),
     };
 
     let params: std::collections::HashMap<_, _> = url.query_pairs().collect();
@@ -84,6 +84,15 @@ mod tests {
         assert_eq!(res.account, "user@gmail.com");
         assert_eq!(res.digits, 6);
         assert_eq!(res.period, 30);
+    }
+
+    #[test]
+    fn test_parse_uri_encoded_separator() {
+        // Real-world export form: separator percent-encoded, account with + and %
+        let uri = "otpauth://totp/ACME%20Corp%3Ajohn%2Btest%40acme.io?secret=JBSWY3DPEHPK3PXP";
+        let res = parse_otpauth_uri(uri).unwrap();
+        assert_eq!(res.issuer, "ACME Corp");
+        assert_eq!(res.account, "john+test@acme.io");
     }
 
     #[test]

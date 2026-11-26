@@ -11,12 +11,12 @@ use crate::vault::types::AccountInput;
 /// and Google Authenticator `otpauth-migration://offline?data=...` (multiple accounts).
 ///
 /// Uses sequential image preprocessing to handle low-quality photos:
-/// 1. Raw grayscale
-/// 2. 2× nearest-neighbor upscale (fast)
-/// 3. 3× Lanczos upscale (high quality, fallback)
+/// 1. Raw grayscale (rqrr)
+/// 2. 2× nearest-neighbor upscale (rqrr)
+/// 3. 3× Lanczos upscale (rqrr)
+/// 4. quircs on raw + 2× — handles perspective distortion in phone photos
 pub fn decode_qr_image(path: &Path) -> Result<Vec<AccountInput>, String> {
-    let img = image::open(path)
-        .map_err(|e| format!("Failed to open image: {e}"))?;
+    let img = image::open(path).map_err(|e| format!("Failed to open image: {e}"))?;
 
     let luma = img.to_luma8();
     if let Some(content) = try_decode_qr(&luma) {
@@ -24,13 +24,23 @@ pub fn decode_qr_image(path: &Path) -> Result<Vec<AccountInput>, String> {
     }
 
     let (w, h) = (img.width(), img.height());
-    let upscale_2x = img.resize_exact(w * 2, h * 2, image::imageops::FilterType::Nearest).to_luma8();
+    let upscale_2x = img
+        .resize_exact(w * 2, h * 2, image::imageops::FilterType::Nearest)
+        .to_luma8();
     if let Some(content) = try_decode_qr(&upscale_2x) {
         return parse_qr_content(&content);
     }
 
-    let upscale_3x = img.resize(w * 3, h * 3, image::imageops::FilterType::Lanczos3).to_luma8();
+    let upscale_3x = img
+        .resize(w * 3, h * 3, image::imageops::FilterType::Lanczos3)
+        .to_luma8();
     if let Some(content) = try_decode_qr(&upscale_3x) {
+        return parse_qr_content(&content);
+    }
+
+    // Last resort: quircs does per-grid perspective correction, which rescues
+    // angled/blurry phone photos that rqrr cannot detect at all.
+    if let Some(content) = quircs_decode(&luma).or_else(|| quircs_decode(&upscale_2x)) {
         return parse_qr_content(&content);
     }
 
@@ -44,6 +54,17 @@ fn try_decode_qr(luma: &GrayImage) -> Option<String> {
         return None;
     }
     grids[0].decode().ok().map(|(_, content)| content)
+}
+
+/// Decode via quircs (perspective-correcting decoder).
+fn quircs_decode(luma: &GrayImage) -> Option<String> {
+    let mut decoder = quircs::Quirc::default();
+    let codes = decoder.identify(luma.width() as usize, luma.height() as usize, luma.as_raw());
+    codes.flatten().find_map(|code| {
+        code.decode()
+            .ok()
+            .map(|d| String::from_utf8_lossy(&d.payload).to_string())
+    })
 }
 
 fn parse_qr_content(content: &str) -> Result<Vec<AccountInput>, String> {

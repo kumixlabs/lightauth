@@ -2,8 +2,9 @@ pub mod commands;
 pub mod import;
 pub mod state;
 pub mod totp;
-pub mod tray;
 pub mod vault;
+
+use tauri::Manager;
 
 use state::AppState;
 use std::sync::Mutex;
@@ -18,23 +19,24 @@ pub fn run() {
     let vault = load_vault();
 
     tauri::Builder::default()
-        .setup(|app| {
-            tray::setup_tray(app.handle())?;
-            Ok(())
-        })
-        .plugin(tauri_plugin_opener::init())
+        // Single instance: a second launch focuses the running window
+        // instead of spawning a duplicate.
+        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.unminimize();
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_log::Builder::new().build())
         .manage(AppState {
             vault: Mutex::new(vault),
         })
         .invoke_handler(tauri::generate_handler![
             // Vault
-            vault_exists,
-            vault_init,
             vault_export,
             vault_import,
             // Workspaces
@@ -42,7 +44,6 @@ pub fn run() {
             workspace_create,
             workspace_update,
             workspace_delete,
-            workspace_reorder,
             workspace_export,
             workspace_import,
             // Accounts

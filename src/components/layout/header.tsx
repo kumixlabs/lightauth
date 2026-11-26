@@ -1,7 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { ChevronDown, Plus, Settings } from "lucide-react";
 
-import { toastSuccess } from "@kumix/ui/custom/toast";
+import { toastError, toastSuccess } from "@kumix/ui/custom/toast";
 import { Button } from "@kumix/ui/ui/button";
 import {
   Dialog,
@@ -45,6 +45,8 @@ export function Header() {
       setWorkspaceName("");
       setDialogOpen(false);
       toastSuccess({ message: "Workspace created" });
+    } catch (err) {
+      toastError({ message: `Failed to create workspace: ${err}` });
     } finally {
       setLoading(false);
     }

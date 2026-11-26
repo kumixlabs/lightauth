@@ -16,7 +16,8 @@
 
 - **Product**: LightAuth — lightweight offline desktop TOTP authenticator (PRD: `LightAuth-PRD.md`).
 - **Frontend**: React 19 + TypeScript + Vite + Tailwind CSS v4 + `@kumix/ui` component library.
-- **Backend**: Tauri 2 (Rust) + `totp-rs` (code generation) + `rqrr` & `image` (QR decoding) + `data-encoding` (Base32/Base64).
+- **Backend**: Tauri 2 (Rust) + `totp-rs` (code generation) + `rqrr` & `quircs` & `image` (QR decoding) + `data-encoding` (Base32/Base64).
+- **Auto-update**: `@tauri-apps/plugin-updater`. `App.tsx` runs a silent `check()` on launch when `settings.autoUpdate` (default ON) → `downloadAndInstall()` → `relaunch()`. Manual check in Settings (`UpdateCheckerRow`). Artifacts signed in CI (`release.yml`), `createUpdaterArtifacts: true`.
 - **State**: Zustand store at `src/stores/app-store.ts` (persisted to `localStorage`: `activeWorkspaceId`, `settings`).
 - **Vault storage**: Plain JSON at `$APPDATA/lightauth/vault.json` (or `~/.config/lightauth/vault.json` on Linux, `~/Library/Application Support/lightauth/vault.json` on macOS).
   - Storage writes are atomic: written to `vault.json.tmp` then renamed to `vault.json` to prevent file corruption.
@@ -25,7 +26,7 @@
 - **Dialogs & Toasts**:
   - Always use `@kumix/ui/custom/toast` (`toastSuccess`, `toastError`, `ToastContainer`). Never introduce `sonner`.
   - Always use `@kumix/ui/custom/confirm-dialog` (`ConfirmDialog`) for destructive actions. Do not use native OS `ask()` dialogs.
-- **System Tray**: `src-tauri/src/tray.rs` with toggle window, show/hide, quit, and close-to-tray handling.
+- **Single instance**: `tauri-plugin-single-instance` in `lib.rs` — second launch focuses the existing window.
 
 # Import & Export Capabilities
 
@@ -34,8 +35,8 @@
   - Zero external protobuf crate; relies on `data-encoding` crate.
   - Supports both QR image import and URI string pasting in Import dialog.
 - **QR Image Decoding**:
-  - Sequential fallback chain in `src-tauri/src/import/qr.rs`: (1) raw grayscale -> (2) 2× nearest-neighbor upscale -> (3) 3× Lanczos upscale.
-  - Handles low-quality mobile phone photos and screenshots.
+  - Sequential fallback chain in `src-tauri/src/import/qr.rs`: (1) raw grayscale -> (2) 2× nearest-neighbor upscale -> (3) 3× Lanczos upscale (all `rqrr`) -> (4) `quircs` on raw + 2× (per-grid perspective correction).
+  - Handles low-quality and perspective-distorted phone photos and screenshots.
 - **Backup & Restore**:
   - Full Vault Backup / Import in Settings modal.
   - Per-Workspace Export / Import in Settings modal (clean JSON without workspace ID conflicts).

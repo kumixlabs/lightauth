@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
-import { exit } from "@tauri-apps/plugin-process";
+import { relaunch } from "@tauri-apps/plugin-process";
+import { check } from "@tauri-apps/plugin-updater";
 import { ImagePlus, Link, Loader2, Plus } from "lucide-react";
 
 import { ToastContainer, toastError, toastSuccess } from "@kumix/ui/custom/toast";
@@ -38,33 +38,18 @@ export default function App() {
   const importQr = useStore((s) => s.importQr);
   const [importing, setImporting] = useState(false);
 
-  // Close / Tray behavior
+  // Silent update check once per launch; auto-installs when enabled
   useEffect(() => {
-    let unlisten: (() => void) | undefined;
-    let cancelled = false;
-
-    getCurrentWindow()
-      .onCloseRequested(async (event) => {
-        event.preventDefault();
-        if (useStore.getState().settings.minimizeToTray) {
-          try {
-            await getCurrentWindow().hide();
-          } catch (err) {
-            console.error("Failed to hide to tray:", err);
-          }
-        } else {
-          await exit(0);
-        }
+    if (!useStore.getState().settings.autoUpdate) return;
+    check()
+      .then((update) => {
+        if (!update?.available) return;
+        void update
+          .downloadAndInstall()
+          .then(() => relaunch())
+          .catch((err) => console.error("Auto-update failed:", err));
       })
-      .then((fn) => {
-        if (cancelled) fn();
-        else unlisten = fn;
-      });
-
-    return () => {
-      cancelled = true;
-      unlisten?.();
-    };
+      .catch(() => {});
   }, []);
 
   useEffect(() => {

@@ -1,7 +1,7 @@
 use tauri::State;
 
 use crate::state::AppState;
-use crate::totp::generator::generate_code;
+use crate::totp::generator::{generate_code, sanitize_secret};
 use crate::vault::storage;
 use crate::vault::types::{Account, ImportResult, Workspace};
 
@@ -48,19 +48,25 @@ pub fn workspace_list(state: State<AppState>) -> Result<Vec<Workspace>, String> 
     let mut ws = vault.workspaces.clone();
     ws.sort_by_key(|w| w.sort_order);
     for w in &mut ws {
-        w.account_count = vault.accounts.iter().filter(|a| a.workspace_id == w.id).count();
+        w.account_count = vault
+            .accounts
+            .iter()
+            .filter(|a| a.workspace_id == w.id)
+            .count();
     }
     Ok(ws)
 }
 
 #[tauri::command]
-pub fn workspace_create(
-    name: String,
-    state: State<AppState>,
-) -> Result<Workspace, String> {
+pub fn workspace_create(name: String, state: State<AppState>) -> Result<Workspace, String> {
     let mut vault = state.vault.lock().map_err(|e| e.to_string())?;
     let now = chrono::Utc::now().to_rfc3339();
-    let max_order = vault.workspaces.iter().map(|w| w.sort_order).max().unwrap_or(-1);
+    let max_order = vault
+        .workspaces
+        .iter()
+        .map(|w| w.sort_order)
+        .max()
+        .unwrap_or(-1);
     let ws = Workspace {
         id: uuid::Uuid::new_v4().to_string(),
         name,
@@ -103,20 +109,6 @@ pub fn workspace_delete(id: String, state: State<AppState>) -> Result<(), String
     vault.accounts.retain(|a| a.workspace_id != id);
     storage::save_vault(&vault)?;
     Ok(())
-}
-
-#[tauri::command]
-pub fn workspace_reorder(ids: Vec<String>, state: State<AppState>) -> Result<Vec<Workspace>, String> {
-    let mut vault = state.vault.lock().map_err(|e| e.to_string())?;
-    for (i, id) in ids.iter().enumerate() {
-        if let Some(ws) = vault.workspaces.iter_mut().find(|w| &w.id == id) {
-            ws.sort_order = i as i32;
-        }
-    }
-    storage::save_vault(&vault)?;
-    let mut ws = vault.workspaces.clone();
-    ws.sort_by_key(|w| w.sort_order);
-    Ok(ws)
 }
 
 #[tauri::command]
@@ -181,7 +173,7 @@ pub fn workspace_import(
     let now = chrono::Utc::now().to_rfc3339();
 
     for acc in incoming_accounts {
-        let clean_secret = acc.secret.trim().replace(' ', "").to_uppercase();
+        let clean_secret = sanitize_secret(&acc.secret);
         // Skip invalid secrets
         if generate_code(&clean_secret, &acc.algorithm, acc.digits, acc.period).is_err() {
             skipped += 1;
@@ -192,7 +184,7 @@ pub fn workspace_import(
             a.workspace_id == workspace_id
                 && a.issuer == acc.issuer
                 && a.account == acc.account
-                && a.secret.trim().replace(' ', "").to_uppercase() == clean_secret
+                && sanitize_secret(&a.secret) == clean_secret
         });
 
         if exists {

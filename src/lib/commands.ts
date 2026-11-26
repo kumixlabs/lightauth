@@ -10,8 +10,6 @@ import type {
 } from "@/types";
 
 // Vault
-export const vaultExists = () => invoke<boolean>("vault_exists");
-export const vaultInit = () => invoke<void>("vault_init");
 export const vaultExport = (path: string) => invoke<void>("vault_export", { path });
 export const vaultImport = (path: string) => invoke<ImportResult>("vault_import", { path });
 
@@ -21,8 +19,6 @@ export const workspaceCreate = (name: string) => invoke<Workspace>("workspace_cr
 export const workspaceUpdate = (id: string, name: string) =>
   invoke<Workspace>("workspace_update", { id, name });
 export const workspaceDelete = (id: string) => invoke<void>("workspace_delete", { id });
-export const workspaceReorder = (ids: string[]) =>
-  invoke<Workspace[]>("workspace_reorder", { ids });
 export const workspaceExport = (workspaceId: string, path: string) =>
   invoke<void>("workspace_export", { workspaceId, path });
 export const workspaceImport = (workspaceId: string, path: string) =>

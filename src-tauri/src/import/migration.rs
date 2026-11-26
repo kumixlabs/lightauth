@@ -16,14 +16,18 @@ pub fn parse_migration_uri(uri: &str) -> Result<Vec<AccountInput>, String> {
         .and_then(|q| {
             q.split('&').find_map(|kv| {
                 let (k, v) = kv.split_once('=')?;
-                if k == "data" { Some(v) } else { None }
+                if k == "data" {
+                    Some(v)
+                } else {
+                    None
+                }
             })
         })
         .ok_or("Missing 'data' parameter")?;
 
     // URL-decode then base64-decode
-    let decoded_param = urlencoding::decode(data_param)
-        .map_err(|e| format!("URL decode error: {e}"))?;
+    let decoded_param =
+        urlencoding::decode(data_param).map_err(|e| format!("URL decode error: {e}"))?;
 
     let payload = base64_decode(&decoded_param)?;
     parse_migration_payload(&payload)
@@ -38,7 +42,9 @@ fn base64_decode(input: &str) -> Result<Vec<u8>, String> {
         3 => format!("{input}="),
         _ => input.to_string(),
     };
-    BASE64.decode(padded.as_bytes()).map_err(|e| format!("Base64 decode error: {e}"))
+    BASE64
+        .decode(padded.as_bytes())
+        .map_err(|e| format!("Base64 decode error: {e}"))
 }
 
 /// Manual protobuf decoder for Google Authenticator MigrationPayload.
@@ -54,11 +60,13 @@ fn parse_migration_payload(data: &[u8]) -> Result<Vec<AccountInput>, String> {
         if field_number == 1 && wire_type == 2 {
             // length-delimited: OtpParameters sub-message
             let (len, new_pos) = read_varint(data, pos)?;
-            pos = new_pos;
-            let end = pos + len as usize;
+            let end = new_pos
+                .checked_add(len as usize)
+                .ok_or("Invalid field length")?;
             if end > data.len() {
                 return Err("Truncated protobuf".into());
             }
+            pos = new_pos;
             if let Ok(input) = parse_otp_parameters(&data[pos..end]) {
                 accounts.push(input);
             }
@@ -91,27 +99,21 @@ fn parse_otp_parameters(data: &[u8]) -> Result<AccountInput, String> {
         match (field_number, wire_type) {
             (1, 2) => {
                 // secret (bytes, length-delimited)
-                let (len, new_pos) = read_varint(data, pos)?;
+                let (bytes, new_pos) = read_len_delimited(data, pos)?;
+                secret_bytes = Some(bytes.to_vec());
                 pos = new_pos;
-                let end = pos + len as usize;
-                secret_bytes = Some(data[pos..end].to_vec());
-                pos = end;
             }
             (2, 2) => {
                 // name (string)
-                let (len, new_pos) = read_varint(data, pos)?;
+                let (bytes, new_pos) = read_len_delimited(data, pos)?;
+                name = String::from_utf8_lossy(bytes).to_string();
                 pos = new_pos;
-                let end = pos + len as usize;
-                name = String::from_utf8_lossy(&data[pos..end]).to_string();
-                pos = end;
             }
             (3, 2) => {
                 // issuer (string)
-                let (len, new_pos) = read_varint(data, pos)?;
+                let (bytes, new_pos) = read_len_delimited(data, pos)?;
+                issuer = String::from_utf8_lossy(bytes).to_string();
                 pos = new_pos;
-                let end = pos + len as usize;
-                issuer = String::from_utf8_lossy(&data[pos..end]).to_string();
-                pos = end;
             }
             (4, 0) => {
                 // algorithm (varint enum)
@@ -152,15 +154,20 @@ fn parse_otp_parameters(data: &[u8]) -> Result<AccountInput, String> {
         (String::new(), name)
     };
 
-    let final_issuer = if issuer.is_empty() { parsed_issuer } else { issuer };
+    let final_issuer = if issuer.is_empty() {
+        parsed_issuer
+    } else {
+        issuer
+    };
 
     let algorithm = match algorithm_val {
-        0 | 1 => "SHA1",
         2 => "SHA256",
         3 => "SHA512",
-        4 => "MD5",
+        // 4 = MD5: unsupported by totp-rs; reject rather than emit wrong codes
+        4 => return Err("MD5 algorithm not supported".into()),
         _ => "SHA1",
-    }.to_string();
+    }
+    .to_string();
 
     let digits = match digits_val {
         2 => 8,
@@ -175,6 +182,18 @@ fn parse_otp_parameters(data: &[u8]) -> Result<AccountInput, String> {
         digits,
         period: 30,
     })
+}
+
+/// Read a length-delimited field's bytes, bounds-checked.
+fn read_len_delimited(data: &[u8], pos: usize) -> Result<(&[u8], usize), String> {
+    let (len, new_pos) = read_varint(data, pos)?;
+    let end = new_pos
+        .checked_add(len as usize)
+        .ok_or("Invalid field length")?;
+    if end > data.len() {
+        return Err("Truncated field".into());
+    }
+    Ok((&data[new_pos..end], end))
 }
 
 /// Read a protobuf varint, return (value, new_position).
@@ -222,7 +241,9 @@ fn skip_field(data: &[u8], pos: usize, wire_type: u8) -> Result<usize, String> {
         2 => {
             // length-delimited
             let (len, new_pos) = read_varint(data, pos)?;
-            Ok(new_pos + len as usize)
+            new_pos
+                .checked_add(len as usize)
+                .ok_or_else(|| "Invalid field length".into())
         }
         5 => {
             // 32-bit
@@ -249,5 +270,13 @@ mod tests {
     #[test]
     fn test_invalid_base64() {
         assert!(parse_migration_uri("otpauth-migration://offline?data=!!!invalid").is_err());
+    }
+
+    #[test]
+    fn test_truncated_otp_parameters_no_panic() {
+        // Outer: field 1, len 5 -> submessage [0x0A, 0x05, 'x', 'y', 'z']
+        // Inner: field 1 (secret), len 5, but only 3 bytes remain -> must Err, not panic
+        let payload = [0x0Au8, 0x05, 0x0A, 0x05, b'x', b'y', b'z'];
+        assert!(parse_migration_payload(&payload).is_err());
     }
 }

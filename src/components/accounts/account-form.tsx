@@ -83,7 +83,7 @@ export function AccountForm({ open, onOpenChange, account }: AccountFormProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-105">
+      <DialogContent className="max-h-[80vh] max-w-105 overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Account" : "Add Account"}</DialogTitle>
         </DialogHeader>

@@ -49,8 +49,7 @@ export interface AccountPatch {
 export interface AppSettings {
   theme: Theme;
   clipboardAutoClear: number; // seconds, 0 = off
-  startMinimized: boolean;
-  minimizeToTray: boolean;
+  autoUpdate: boolean;
 }
 
 export interface ImportResult {
